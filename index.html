@@ -16,33 +16,29 @@
 
   <main class="app">
 
-    <header>
-      <p class="eyebrow">Garasi Pribadi</p>
-      <h1 class="wordmark">MY <span>GARAGE</span></h1>
-      <div class="rule"></div>
+    <header class="head">
+      <div>
+        <p class="eyebrow">Garasi Pribadi</p>
+        <h1 class="wordmark">MY <span>GARAGE</span></h1>
+        <div class="rule"></div>
+      </div>
+      <button class="btn small js-add" type="button">+ Tambah</button>
     </header>
 
-    <section class="card empty">
+    <section id="vehicle-list" class="list"></section>
+
+    <section id="empty" class="card empty" hidden>
       <svg viewBox="0 0 64 36" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M6 26v-7l6-8h20l9 8h13v7"/>
         <circle cx="18" cy="27" r="4.5" fill="#22252C"/>
         <circle cx="48" cy="27" r="4.5" fill="#22252C"/>
       </svg>
       <h2>Garasi masih kosong</h2>
-      <p>Kendaraan Anda akan tampil di sini. Semua data tersimpan hanya di perangkat Anda.</p>
-      <button class="btn" type="button" disabled>Tambah Kendaraan</button>
+      <p>Tambahkan kendaraan pertama Anda. Semua data tersimpan hanya di perangkat ini.</p>
+      <button class="btn js-add" type="button">Tambah Kendaraan</button>
     </section>
 
-    <section class="card">
-      <h2>Status proyek</h2>
-      <ul class="checklist">
-        <li class="ok">Halaman (HTML) tampil</li>
-        <li id="css-status">Gaya (CSS) terpasang</li>
-        <li id="js-status">JavaScript menunggu...</li>
-        <li id="sw-status">Mode offline menunggu...</li>
-      </ul>
-      <p id="today"></p>
-    </section>
+    <p id="today" class="today"></p>
 
   </main>
 
@@ -53,6 +49,37 @@
     <span class="tab">Pengaturan</span>
   </nav>
 
+  <div id="sheet" class="sheet" hidden>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+      <h2 id="sheet-title">Tambah Kendaraan</h2>
+
+      <form id="vehicle-form" autocomplete="off">
+        <label for="f-jenis">Jenis</label>
+        <select id="f-jenis">
+          <option value="Mobil">Mobil</option>
+          <option value="Motor">Motor</option>
+        </select>
+
+        <label for="f-nama">Nama kendaraan</label>
+        <input id="f-nama" type="text" maxlength="60" placeholder="Contoh: Toyota Avanza 1.5 G" required>
+
+        <label for="f-plat">Plat nomor</label>
+        <input id="f-plat" type="text" maxlength="12" placeholder="Contoh: B 1234 XYZ" autocapitalize="characters" required>
+
+        <label for="f-tahun">Tahun</label>
+        <input id="f-tahun" type="number" inputmode="numeric" placeholder="Contoh: 2020" required>
+
+        <p id="form-error" class="form-error" hidden></p>
+
+        <div class="form-actions">
+          <button class="btn primary" type="submit">Simpan</button>
+          <button class="btn" type="button" id="btn-cancel">Batal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="db.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

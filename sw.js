@@ -1,12 +1,13 @@
 // MY GARAGE - sw.js (service worker: membuat aplikasi bisa dibuka tanpa internet)
 
-// Jika Anda mengubah file aplikasi di kemudian hari, naikkan nomor ini (v2, v3, ...)
-var CACHE_NAME = "my-garage-v1";
+// Setiap kali Anda mengubah file aplikasi, naikkan nomor ini (v3, v4, ...)
+var CACHE_NAME = "my-garage-v2";
 
 var FILES = [
   "./",
   "./index.html",
   "./style.css",
+  "./db.js",
   "./app.js",
   "./manifest.json",
   "./icon-192.png",
@@ -15,10 +16,13 @@ var FILES = [
 ];
 
 // 1. Saat pertama dipasang: simpan semua file ke memori perangkat
+//    ("reload" memastikan file yang disimpan adalah versi terbaru dari internet)
 self.addEventListener("install", function (event) {
   event.waitUntil(
     caches.open(CACHE_NAME).then(function (cache) {
-      return cache.addAll(FILES);
+      return Promise.all(FILES.map(function (file) {
+        return cache.add(new Request(file, { cache: "reload" }));
+      }));
     })
   );
   self.skipWaiting();
