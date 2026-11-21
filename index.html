@@ -16,44 +16,92 @@
 
   <main class="app">
 
-    <header class="head">
-      <div>
-        <p class="eyebrow">Garasi Pribadi</p>
-        <h1 class="wordmark">MY <span>GARAGE</span></h1>
-        <div class="rule"></div>
-      </div>
-      <button class="btn small js-add" type="button">+ Tambah</button>
+    <header>
+      <p class="eyebrow">Garasi Pribadi</p>
+      <h1 class="wordmark">MY <span>GARAGE</span></h1>
+      <div class="rule"></div>
     </header>
 
-    <section id="vehicle-list" class="list"></section>
+    <!-- ===== Layar Garasi ===== -->
+    <div id="view-garasi" class="view">
+      <div class="section-head">
+        <h2>Kendaraan Saya</h2>
+        <button class="btn small js-add" type="button">+ Tambah</button>
+      </div>
 
-    <section id="empty" class="card empty" hidden>
-      <svg viewBox="0 0 64 36" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M6 26v-7l6-8h20l9 8h13v7"/>
-        <circle cx="18" cy="27" r="4.5" fill="#22252C"/>
-        <circle cx="48" cy="27" r="4.5" fill="#22252C"/>
-      </svg>
-      <h2>Garasi masih kosong</h2>
-      <p>Tambahkan kendaraan pertama Anda. Semua data tersimpan hanya di perangkat ini.</p>
-      <button class="btn js-add" type="button">Tambah Kendaraan</button>
-    </section>
+      <section id="vehicle-list" class="list"></section>
 
-    <p id="today" class="today"></p>
+      <section id="empty" class="card empty" hidden>
+        <svg viewBox="0 0 64 36" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 26v-7l6-8h20l9 8h13v7"/>
+          <circle cx="18" cy="27" r="4.5" fill="#22252C"/>
+          <circle cx="48" cy="27" r="4.5" fill="#22252C"/>
+        </svg>
+        <h2>Garasi masih kosong</h2>
+        <p>Tambahkan kendaraan pertama Anda. Semua data tersimpan hanya di perangkat ini.</p>
+        <button class="btn js-add" type="button">Tambah Kendaraan</button>
+      </section>
+
+      <p id="today" class="today"></p>
+    </div>
+
+    <!-- ===== Layar Pengaturan ===== -->
+    <div id="view-pengaturan" class="view" hidden>
+      <div class="section-head">
+        <h2>Pengaturan</h2>
+      </div>
+
+      <section class="card form">
+        <h2>Cadangkan Data</h2>
+        <p>Buat satu file cadangan yang dikunci dengan sandi. Simpan di iCloud Drive atau aplikasi Berkas.</p>
+
+        <label for="b-sandi">Sandi cadangan</label>
+        <input id="b-sandi" type="password" autocomplete="off" placeholder="Minimal 8 karakter">
+
+        <label for="b-sandi2">Ulangi sandi</label>
+        <input id="b-sandi2" type="password" autocomplete="off">
+
+        <p class="note warn">Sandi tidak bisa dipulihkan. Jika lupa, cadangan tidak bisa dibuka. Catat di tempat aman.</p>
+
+        <button id="btn-backup" class="btn primary" type="button">Buat Cadangan</button>
+        <button id="btn-save" class="btn" type="button" hidden>Simpan File Cadangan</button>
+        <p id="backup-msg" class="note" role="status" hidden></p>
+      </section>
+
+      <section class="card form">
+        <h2>Pulihkan Data</h2>
+        <p>Pilih file cadangan dan masukkan sandinya. Data kendaraan saat ini akan diganti dengan isi cadangan.</p>
+
+        <label for="r-file">File cadangan</label>
+        <input id="r-file" type="file">
+
+        <label for="r-sandi">Sandi cadangan</label>
+        <input id="r-sandi" type="password" autocomplete="off">
+
+        <button id="btn-restore" class="btn primary" type="button">Pulihkan</button>
+        <p id="restore-msg" class="note" role="status" hidden></p>
+      </section>
+
+      <section class="card">
+        <h2>Privasi</h2>
+        <p>Data kendaraan hanya ada di perangkat ini. Aplikasi tidak memakai akun, server, atau pelacakan.</p>
+      </section>
+    </div>
 
   </main>
 
   <nav class="tabbar">
-    <span class="tab active">Garasi</span>
-    <span class="tab">Servis</span>
-    <span class="tab">Biaya</span>
-    <span class="tab">Pengaturan</span>
+    <button class="tab active" type="button" data-view="garasi">Garasi</button>
+    <button class="tab soon" type="button" aria-disabled="true">Servis</button>
+    <button class="tab soon" type="button" aria-disabled="true">Biaya</button>
+    <button class="tab" type="button" data-view="pengaturan">Pengaturan</button>
   </nav>
 
   <div id="sheet" class="sheet" hidden>
     <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
       <h2 id="sheet-title">Tambah Kendaraan</h2>
 
-      <form id="vehicle-form" autocomplete="off">
+      <form id="vehicle-form" class="form" autocomplete="off">
         <label for="f-jenis">Jenis</label>
         <select id="f-jenis">
           <option value="Mobil">Mobil</option>
@@ -69,7 +117,7 @@
         <label for="f-tahun">Tahun</label>
         <input id="f-tahun" type="number" inputmode="numeric" placeholder="Contoh: 2020" required>
 
-        <p id="form-error" class="form-error" hidden></p>
+        <p id="form-error" class="note bad" hidden></p>
 
         <div class="form-actions">
           <button class="btn primary" type="submit">Simpan</button>
@@ -80,6 +128,7 @@
   </div>
 
   <script src="db.js"></script>
+  <script src="backup.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

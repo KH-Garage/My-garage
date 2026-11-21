@@ -8,6 +8,9 @@
   --text: #F3F1EE;
   --muted: #9A9EA8;
   --red: #C8283A;
+  --ok: #4CB782;
+  --warn: #D9B36A;
+  --bad: #FF7A88;
   color-scheme: dark;
 }
 
@@ -42,14 +45,9 @@ body.lock { overflow: hidden; }
   padding-right: max(20px, env(safe-area-inset-right, 0px));
 }
 
-/* ---------- Judul ---------- */
+.view { display: grid; gap: 16px; }
 
-.head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
+/* ---------- Judul ---------- */
 
 .eyebrow {
   margin: 0;
@@ -73,6 +71,23 @@ body.lock { overflow: hidden; }
   height: 2px;
   margin-top: 14px;
   background: var(--red);
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.section-head h2 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 /* ---------- Kartu & tombol ---------- */
@@ -105,11 +120,15 @@ body.lock { overflow: hidden; }
 }
 
 .btn:active { background: rgba(200, 40, 58, 0.25); }
+.btn:disabled { opacity: 0.5; }
 
-.btn.small { margin-top: 4px; padding: 9px 16px; font-size: 12px; white-space: nowrap; }
+.btn.small { margin-top: 0; padding: 9px 16px; font-size: 12px; white-space: nowrap; }
 
 .btn.primary { background: var(--red); }
 .btn.primary:active { background: #A81F2F; }
+
+.card.form .btn { width: 100%; }
+.card.form .btn + .btn { margin-top: 12px; }
 
 /* ---------- Daftar kendaraan ---------- */
 
@@ -179,13 +198,19 @@ body.lock { overflow: hidden; }
 
 .tab {
   position: relative;
-  padding-top: 8px;
-  text-align: center;
+  padding: 8px 0 0;
+  font: inherit;
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+  text-align: center;
   color: var(--muted);
+  background: none;
+  border: 0;
+  cursor: pointer;
 }
+
+.tab.soon { opacity: 0.4; cursor: default; }
 
 .tab.active { color: var(--text); }
 
@@ -199,7 +224,47 @@ body.lock { overflow: hidden; }
   background: var(--red);
 }
 
-/* ---------- Formulir (lembar dari bawah) ---------- */
+/* ---------- Formulir ---------- */
+
+.form label {
+  display: block;
+  margin: 14px 0 6px;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Ukuran huruf 16px agar iPhone tidak memperbesar layar saat mengetik */
+.form input,
+.form select {
+  width: 100%;
+  padding: 13px 14px;
+  font: inherit;
+  font-size: 16px;
+  color: var(--text);
+  background: var(--field);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.form input[type="file"] { font-size: 14px; padding: 10px 12px; }
+
+.form input:focus,
+.form select:focus {
+  outline: none;
+  border-color: var(--red);
+}
+
+.card p.note, p.note { margin-top: 14px; font-size: 13px; }
+.note.warn { color: var(--warn); }
+.note.good { color: var(--ok); }
+.note.bad { color: var(--bad); }
+
+.form-actions { display: flex; gap: 12px; }
+.form-actions .btn { flex: 1; }
+
+/* ---------- Lembar dari bawah ---------- */
 
 .sheet {
   position: fixed;
@@ -226,36 +291,3 @@ body.lock { overflow: hidden; }
 }
 
 .sheet-panel h2 { margin: 0 0 14px; font-size: 20px; font-weight: 600; }
-
-.sheet-panel label {
-  display: block;
-  margin: 14px 0 6px;
-  font-size: 11px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-/* Ukuran huruf 16px agar iPhone tidak memperbesar layar saat mengetik */
-.sheet-panel input,
-.sheet-panel select {
-  width: 100%;
-  padding: 13px 14px;
-  font: inherit;
-  font-size: 16px;
-  color: var(--text);
-  background: var(--field);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-}
-
-.sheet-panel input:focus,
-.sheet-panel select:focus {
-  outline: none;
-  border-color: var(--red);
-}
-
-.form-error { margin-top: 14px !important; color: #FF7A88 !important; }
-
-.form-actions { display: flex; gap: 12px; }
-.form-actions .btn { flex: 1; }

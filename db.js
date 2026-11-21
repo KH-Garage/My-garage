@@ -45,6 +45,20 @@ var GarageDB = (function () {
     },
     remove: function (id) {
       return run("readwrite", function (store) { return store.delete(id); });
+    },
+    // Mengosongkan laci lalu mengisinya dengan daftar baru (dipakai saat memulihkan cadangan)
+    replaceAll: function (items) {
+      return open().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          var tx = db.transaction("vehicles", "readwrite");
+          var store = tx.objectStore("vehicles");
+          store.clear();
+          items.forEach(function (item) { store.put(item); });
+          tx.oncomplete = function () { resolve(); };
+          tx.onerror = function () { reject(tx.error); };
+          tx.onabort = function () { reject(tx.error); };
+        });
+      });
     }
   };
 })();
