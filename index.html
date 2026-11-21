@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101114">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MY GARAGE">
+  <title>MY GARAGE</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <main class="app">
+
+    <header>
+      <p class="eyebrow">Garasi Pribadi</p>
+      <h1 class="wordmark">MY <span>GARAGE</span></h1>
+      <div class="rule"></div>
+    </header>
+
+    <section class="card empty">
+      <svg viewBox="0 0 64 36" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M6 26v-7l6-8h20l9 8h13v7"/>
+        <circle cx="18" cy="27" r="4.5" fill="#22252C"/>
+        <circle cx="48" cy="27" r="4.5" fill="#22252C"/>
+      </svg>
+      <h2>Garasi masih kosong</h2>
+      <p>Kendaraan Anda akan tampil di sini. Semua data tersimpan hanya di perangkat Anda.</p>
+      <button class="btn" type="button" disabled>Tambah Kendaraan</button>
+    </section>
+
+    <section class="card">
+      <h2>Status proyek</h2>
+      <ul class="checklist">
+        <li class="ok">Halaman (HTML) tampil</li>
+        <li id="css-status">Gaya (CSS) terpasang</li>
+        <li id="js-status">JavaScript menunggu...</li>
+        <li id="sw-status">Mode offline menunggu...</li>
+      </ul>
+      <p id="today"></p>
+    </section>
+
+  </main>
+
+  <nav class="tabbar">
+    <span class="tab active">Garasi</span>
+    <span class="tab">Servis</span>
+    <span class="tab">Biaya</span>
+    <span class="tab">Pengaturan</span>
+  </nav>
+
+  <script src="app.js"></script>
+</body>
+</html>
