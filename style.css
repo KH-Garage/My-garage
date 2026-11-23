@@ -134,7 +134,7 @@ body.lock { overflow: hidden; }
 
 .list { display: grid; gap: 14px; }
 
-.vehicle { display: grid; gap: 4px; }
+.vehicle { display: block; padding: 0; overflow: hidden; }
 
 .v-type {
   font-size: 11px !important;
@@ -226,7 +226,8 @@ body.lock { overflow: hidden; }
 
 /* ---------- Formulir ---------- */
 
-.form label {
+.form label,
+.form .lbl {
   display: block;
   margin: 14px 0 6px;
   font-size: 11px;
@@ -291,3 +292,123 @@ body.lock { overflow: hidden; }
 }
 
 .sheet-panel h2 { margin: 0 0 14px; font-size: 20px; font-weight: 600; }
+
+/* ---------- Layar Servis ---------- */
+
+.form input[type="date"] { display: block; min-height: 48px; }
+
+.picker label { margin-top: 0; }
+
+.summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.summary .k {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.summary .v {
+  margin-top: 4px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.record { display: grid; gap: 4px; }
+
+.r-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.r-top h2 { margin: 0; font-size: 17px; }
+
+.r-cost {
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.record .r-note { color: #C9CCD3; }
+
+/* ---------- Kartu kendaraan dengan foto ---------- */
+
+.v-photo {
+  aspect-ratio: 16 / 9;
+  min-height: 140px;
+  background: var(--field);
+  border-bottom: 1px solid var(--line);
+}
+
+.v-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.v-photo.kosong {
+  display: grid;
+  place-items: center;
+  color: #3A3F4B;
+}
+
+.v-photo.kosong svg { width: 92px; height: auto; }
+
+.v-body { display: grid; gap: 4px; padding: 18px 22px 14px; }
+
+.v-odo { color: var(--text) !important; font-variant-numeric: tabular-nums; }
+.v-odo.belum { color: var(--muted) !important; }
+
+.v-detail { font-size: 12px !important; letter-spacing: 0.04em; }
+
+.v-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 22px;
+  margin-top: 4px;
+}
+
+.v-actions .link-btn { margin-top: 0; }
+
+/* ---------- Foto di formulir ---------- */
+
+.foto-box { display: flex; align-items: center; gap: 14px; }
+
+.foto-preview {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 104px;
+  height: 72px;
+  overflow: hidden;
+  color: #3A3F4B;
+  background: var(--field);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.foto-preview img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.foto-preview svg { width: 56px; height: auto; }
+
+.foto-actions { display: grid; justify-items: start; gap: 8px; }
+.foto-actions .link-btn { margin-top: 0; justify-self: start; }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}

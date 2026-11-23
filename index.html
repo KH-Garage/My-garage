@@ -45,6 +45,37 @@
       <p id="today" class="today"></p>
     </div>
 
+    <!-- ===== Layar Servis ===== -->
+    <div id="view-servis" class="view" hidden>
+      <div class="section-head">
+        <h2>Riwayat Servis</h2>
+        <button id="btn-add-service" class="btn small" type="button">+ Catat</button>
+      </div>
+
+      <div id="service-picker" class="form picker">
+        <label for="s-pilih">Kendaraan</label>
+        <select id="s-pilih"></select>
+      </div>
+
+      <section id="service-summary" class="card summary" hidden>
+        <div>
+          <p class="k">Total biaya</p>
+          <p class="v" id="sum-biaya"></p>
+        </div>
+        <div>
+          <p class="k">Odometer</p>
+          <p class="v" id="sum-km"></p>
+        </div>
+      </section>
+
+      <section id="service-list" class="list"></section>
+
+      <section id="service-empty" class="card empty" hidden>
+        <h2 id="service-empty-title"></h2>
+        <p id="service-empty-text"></p>
+      </section>
+    </div>
+
     <!-- ===== Layar Pengaturan ===== -->
     <div id="view-pengaturan" class="view" hidden>
       <div class="section-head">
@@ -53,7 +84,7 @@
 
       <section class="card form">
         <h2>Cadangkan Data</h2>
-        <p>Buat satu file cadangan yang dikunci dengan sandi. Simpan di iCloud Drive atau aplikasi Berkas.</p>
+        <p>Buat satu file cadangan yang dikunci dengan sandi. Isinya kendaraan dan catatan servis. Simpan di aplikasi Berkas.</p>
 
         <label for="b-sandi">Sandi cadangan</label>
         <input id="b-sandi" type="password" autocomplete="off" placeholder="Minimal 8 karakter">
@@ -70,7 +101,7 @@
 
       <section class="card form">
         <h2>Pulihkan Data</h2>
-        <p>Pilih file cadangan dan masukkan sandinya. Data kendaraan saat ini akan diganti dengan isi cadangan.</p>
+        <p>Pilih file cadangan dan masukkan sandinya. Data saat ini akan diganti dengan isi cadangan.</p>
 
         <label for="r-file">File cadangan</label>
         <input id="r-file" type="file">
@@ -84,7 +115,7 @@
 
       <section class="card">
         <h2>Privasi</h2>
-        <p>Data kendaraan hanya ada di perangkat ini. Aplikasi tidak memakai akun, server, atau pelacakan.</p>
+        <p>Data hanya ada di perangkat ini. Aplikasi tidak memakai akun, server, atau pelacakan.</p>
       </section>
     </div>
 
@@ -92,36 +123,112 @@
 
   <nav class="tabbar">
     <button class="tab active" type="button" data-view="garasi">Garasi</button>
-    <button class="tab soon" type="button" aria-disabled="true">Servis</button>
+    <button class="tab" type="button" data-view="servis">Servis</button>
     <button class="tab soon" type="button" aria-disabled="true">Biaya</button>
     <button class="tab" type="button" data-view="pengaturan">Pengaturan</button>
   </nav>
 
+  <!-- ===== Formulir tambah kendaraan ===== -->
   <div id="sheet" class="sheet" hidden>
     <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
       <h2 id="sheet-title">Tambah Kendaraan</h2>
 
       <form id="vehicle-form" class="form" autocomplete="off">
+        <p class="lbl">Foto kendaraan</p>
+        <div class="foto-box">
+          <div id="f-foto-preview" class="foto-preview"></div>
+          <div class="foto-actions">
+            <button type="button" class="btn small" id="btn-foto">Pilih Foto</button>
+            <button type="button" class="link-btn" id="btn-foto-hapus" hidden>Hapus Foto</button>
+          </div>
+        </div>
+        <input id="f-foto" class="sr-only" type="file" accept="image/*" tabindex="-1" aria-label="Pilih foto kendaraan">
+        <p id="foto-msg" class="note" hidden></p>
+
         <label for="f-jenis">Jenis</label>
         <select id="f-jenis">
           <option value="Mobil">Mobil</option>
           <option value="Motor">Motor</option>
         </select>
 
-        <label for="f-nama">Nama kendaraan</label>
-        <input id="f-nama" type="text" maxlength="60" placeholder="Contoh: Toyota Avanza 1.5 G" required>
+        <label for="f-merek">Merek</label>
+        <input id="f-merek" type="text" maxlength="30" placeholder="Contoh: Toyota" required>
+
+        <label for="f-model">Model</label>
+        <input id="f-model" type="text" maxlength="40" placeholder="Contoh: Avanza 1.5 G" required>
+
+        <label for="f-tahun">Tahun</label>
+        <input id="f-tahun" type="number" inputmode="numeric" placeholder="Contoh: 2020" required>
 
         <label for="f-plat">Plat nomor</label>
         <input id="f-plat" type="text" maxlength="12" placeholder="Contoh: B 1234 XYZ" autocapitalize="characters" required>
 
-        <label for="f-tahun">Tahun</label>
-        <input id="f-tahun" type="number" inputmode="numeric" placeholder="Contoh: 2020" required>
+        <label for="f-odometer">Odometer saat ini (km)</label>
+        <input id="f-odometer" type="number" inputmode="numeric" placeholder="Contoh: 45200" required>
+
+        <label for="f-bahan">Bahan bakar</label>
+        <select id="f-bahan">
+          <option value="Bensin">Bensin</option>
+          <option value="Diesel">Diesel</option>
+          <option value="Hybrid">Hybrid</option>
+          <option value="Listrik">Listrik</option>
+          <option value="Lainnya">Lainnya</option>
+        </select>
+
+        <label for="f-vin">Nomor rangka / VIN (boleh kosong)</label>
+        <input id="f-vin" type="text" maxlength="20" placeholder="Contoh: MHKA1BA1JKJ000123" autocapitalize="characters">
+
+        <label for="f-mesin">Nomor mesin (boleh kosong)</label>
+        <input id="f-mesin" type="text" maxlength="20" placeholder="Contoh: 2NRF123456" autocapitalize="characters">
 
         <p id="form-error" class="note bad" hidden></p>
 
         <div class="form-actions">
           <button class="btn primary" type="submit">Simpan</button>
           <button class="btn" type="button" id="btn-cancel">Batal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== Formulir catat servis ===== -->
+  <div id="sheet-servis" class="sheet" hidden>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-servis-title">
+      <h2 id="sheet-servis-title">Catat Servis</h2>
+
+      <form id="service-form" class="form" autocomplete="off">
+        <label for="s-kendaraan">Kendaraan</label>
+        <select id="s-kendaraan"></select>
+
+        <label for="s-tanggal">Tanggal</label>
+        <input id="s-tanggal" type="date" required>
+
+        <label for="s-km">Odometer (km)</label>
+        <input id="s-km" type="number" inputmode="numeric" placeholder="Contoh: 45200" required>
+
+        <label for="s-jenis">Jenis</label>
+        <select id="s-jenis">
+          <option>Servis Berkala</option>
+          <option>Ganti Oli</option>
+          <option>Ban</option>
+          <option>Rem</option>
+          <option>Aki</option>
+          <option>Perbaikan</option>
+          <option>Pajak &amp; STNK</option>
+          <option>Lainnya</option>
+        </select>
+
+        <label for="s-biaya">Biaya (Rp)</label>
+        <input id="s-biaya" type="number" inputmode="numeric" placeholder="Contoh: 350000" required>
+
+        <label for="s-catatan">Catatan (boleh kosong)</label>
+        <input id="s-catatan" type="text" maxlength="120" placeholder="Contoh: Oli 10W-40, filter oli">
+
+        <p id="service-error" class="note bad" hidden></p>
+
+        <div class="form-actions">
+          <button class="btn primary" type="submit">Simpan</button>
+          <button class="btn" type="button" id="btn-cancel-service">Batal</button>
         </div>
       </form>
     </div>
