@@ -187,21 +187,22 @@ body.lock { overflow: hidden; }
   right: 0;
   bottom: 0;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   padding-top: 10px;
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
-  padding-left: max(8px, env(safe-area-inset-left, 0px));
-  padding-right: max(8px, env(safe-area-inset-right, 0px));
-  background: rgba(16, 17, 20, 0.94);
+  padding-left: max(2px, env(safe-area-inset-left, 0px));
+  padding-right: max(2px, env(safe-area-inset-right, 0px));
+  background: #101114;
   border-top: 1px solid var(--line);
 }
 
 .tab {
   position: relative;
+  min-width: 0;
   padding: 8px 0 0;
   font: inherit;
-  font-size: 11px;
-  letter-spacing: 0.1em;
+  font-size: 10px;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   text-align: center;
   color: var(--muted);
@@ -211,6 +212,11 @@ body.lock { overflow: hidden; }
 }
 
 .tab.soon { opacity: 0.4; cursor: default; }
+
+/* Layar sangat sempit (iPhone lama): huruf menu sedikit diperkecil */
+@media (max-width: 340px) {
+  .tab { font-size: 9px; letter-spacing: 0; }
+}
 
 .tab.active { color: var(--text); }
 
@@ -338,6 +344,84 @@ body.lock { overflow: hidden; }
 }
 
 .record .r-note { color: #C9CCD3; }
+
+/* ---------- Layar BBM ---------- */
+
+.span2 { grid-column: 1 / -1; margin: 0 !important; }
+
+.summary .v { overflow-wrap: anywhere; }
+
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+}
+
+.badge.penuh { color: var(--text); border-color: var(--red); }
+
+.r-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; }
+
+.r-calc {
+  margin-top: 10px !important;
+  padding-top: 10px;
+  font-size: 13px !important;
+  border-top: 1px solid var(--line);
+}
+
+.r-calc strong { color: var(--text); font-variant-numeric: tabular-nums; }
+.r-calc.ok { color: var(--text) !important; }
+.r-calc.warn { color: var(--warn) !important; }
+
+.r-actions { display: flex; justify-content: flex-end; gap: 22px; }
+.r-actions .link-btn { margin-top: 6px; }
+
+.total-box {
+  margin: 0 !important;
+  padding: 13px 14px;
+  font-size: 20px !important;
+  font-weight: 600;
+  color: var(--text) !important;
+  font-variant-numeric: tabular-nums;
+  background: var(--field);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.note.hint { margin-top: 10px; }
+
+.stats3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.stats3 .k {
+  font-size: 10px !important;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.stats3 .v {
+  margin-top: 4px !important;
+  font-size: 15px !important;
+  font-weight: 600;
+  color: var(--text) !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart { margin-top: 16px; }
+.chart svg { display: block; width: 100%; height: auto; }
+.chart .grid { stroke: var(--line); stroke-width: 1; }
+.chart .line { fill: none; stroke: var(--red); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart .dot { fill: var(--red); }
+.chart .dot.last { stroke: var(--card); stroke-width: 2; }
+.chart .t { fill: var(--muted); font-size: 9px; font-family: inherit; font-variant-numeric: tabular-nums; }
 
 /* ---------- Kartu kendaraan dengan foto ---------- */
 

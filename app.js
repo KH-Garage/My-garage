@@ -6,7 +6,8 @@
   var tahunIni = new Date().getFullYear();
   var dataKendaraan = [];
   var dataServis = [];
-  var kendaraanTerpilih = null; // id kendaraan yang sedang dilihat di layar Servis
+  var dataBBM = [];
+  var kendaraanTerpilih = null; // id kendaraan yang sedang dilihat di layar Servis dan BBM
   var urlFoto = {};             // id kendaraan -> alamat sementara foto di layar
 
   var IKON_MOBIL = '<svg viewBox="0 0 64 36" fill="none" stroke="currentColor" stroke-width="1.6" ' +
@@ -82,11 +83,14 @@
     return { merek: t.slice(0, i), model: t.slice(i + 1).trim() };
   }
 
-  // Odometer tertinggi yang pernah dicatat di servis untuk satu kendaraan
+  // Odometer tertinggi yang pernah dicatat (servis atau BBM) untuk satu kendaraan
   function kmTertinggi(vehicleId) {
     var tertinggi = 0;
     dataServis.forEach(function (s) {
       if (s.vehicleId === vehicleId && s.km > tertinggi) { tertinggi = s.km; }
+    });
+    dataBBM.forEach(function (b) {
+      if (b.vehicleId === vehicleId && b.km > tertinggi) { tertinggi = b.km; }
     });
     return tertinggi;
   }
@@ -172,15 +176,18 @@
   }
 
   function muatUlang() {
-    return Promise.all([GarageDB.all(), GarageDB.serviceAll()]).then(function (hasil) {
+    return Promise.all([GarageDB.all(), GarageDB.serviceAll(), GarageDB.fuelAll()]).then(function (hasil) {
       dataKendaraan = hasil[0];
       dataServis = hasil[1];
+      dataBBM = hasil[2];
       // Kendaraan terbaru di atas
       dataKendaraan.sort(function (a, b) { return (b.dibuat || 0) - (a.dibuat || 0); });
       return muatFoto();
     }).then(function () {
+      jenisHargaManual = false; // setelah data berubah, ikuti pengisian terbaru lagi
       tampilkanKendaraan();
       tampilkanServis();
+      tampilkanBBM();
     }).catch(function () {
       var daftar = $("vehicle-list");
       daftar.innerHTML = "";
@@ -239,7 +246,7 @@
       var hapus = buat("button", "link-btn", "Hapus");
       hapus.type = "button";
       hapus.addEventListener("click", function () {
-        if (confirm("Hapus " + namaKendaraan(v) + " dari garasi? Catatan servis dan fotonya ikut terhapus.")) {
+        if (confirm("Hapus " + namaKendaraan(v) + " dari garasi? Catatan servis, catatan BBM, dan fotonya ikut terhapus.")) {
           GarageDB.remove(v.id).then(muatUlang);
         }
       });
@@ -381,7 +388,7 @@
     if (sedangUbah) {
       var tertinggi = kmTertinggi(sedangUbah.id);
       if (odometer < tertinggi) {
-        pesan(errorKendaraan, "Odometer tidak boleh lebih rendah dari catatan servis tertinggi (" +
+        pesan(errorKendaraan, "Odometer tidak boleh lebih rendah dari catatan servis atau BBM tertinggi (" +
           angka(tertinggi) + " km).", "bad");
         return;
       }
@@ -505,7 +512,9 @@
 
   pilih.addEventListener("change", function () {
     kendaraanTerpilih = parseInt(pilih.value, 10);
+    jenisHargaManual = false;
     tampilkanServis();
+    tampilkanBBM();
   });
 
   // ---------- Formulir catat servis ----------
@@ -548,21 +557,10 @@
       return;
     }
 
-    // Odometer harus naik mengikuti tanggal: tidak boleh lebih rendah dari catatan yang lebih lama,
-    // dan tidak boleh lebih tinggi dari catatan yang lebih baru.
-    var bentrok = null;
-    dataServis.forEach(function (s) {
-      if (bentrok || s.vehicleId !== vehicleId) { return; }
-      if (s.tanggal < tanggal && s.km > km) {
-        bentrok = "Odometer lebih rendah dari catatan sebelumnya: " + angka(s.km) +
-          " km pada " + tanggalIndo(s.tanggal) + ".";
-      } else if (s.tanggal > tanggal && s.km < km) {
-        bentrok = "Odometer lebih tinggi dari catatan yang lebih baru: " + angka(s.km) +
-          " km pada " + tanggalIndo(s.tanggal) + ".";
-      }
-    });
-    if (bentrok) {
-      pesan(errorServis, bentrok, "bad");
+    // Odometer harus naik mengikuti tanggal terhadap catatan servis DAN pengisian BBM
+    var konflik = GarageFuel.cekUrutanKm({ tanggal: tanggal, waktu: null, km: km }, catatanLain(vehicleId, null));
+    if (konflik) {
+      pesan(errorServis, pesanKonflik(konflik), "bad");
       return;
     }
 
@@ -593,6 +591,461 @@
     simpanServis();
   });
   formServis.addEventListener("input", function () { errorServis.hidden = true; });
+
+  // ---------- Layar BBM ----------
+
+  var pilihBBM = $("b-pilih");
+  var jenisHarga = null; // jenis BBM yang sedang dilihat di Riwayat Harga
+  var jenisHargaManual = false; // true jika Anda sendiri memilih jenis BBM di Riwayat Harga
+
+  function desimal(n, d) {
+    return Number(n).toLocaleString("id-ID", { minimumFractionDigits: d, maximumFractionDigits: d });
+  }
+
+  function literTeks(n) {
+    return Number(n).toLocaleString("id-ID", { maximumFractionDigits: 2 });
+  }
+
+  // Mengubah isian desimal ("35,5" atau "35.5") menjadi angka. Isian salah menghasilkan NaN.
+  function bacaDesimal(teks) {
+    var s = String(teks).replace(/\s+/g, "");
+    if (s.indexOf(",") !== -1) { s = s.replace(/\./g, "").replace(",", "."); }
+    if (!/^\d+(\.\d+)?$/.test(s)) { return NaN; }
+    return parseFloat(s);
+  }
+
+  // Bilangan bulat. Titik atau koma dianggap pemisah ribuan ("12.500" = 12500).
+  function bacaBulat(teks) {
+    var s = String(teks).replace(/[\s.,]/g, "");
+    if (!/^\d+$/.test(s)) { return NaN; }
+    return parseInt(s, 10);
+  }
+
+  function jamSekarang() {
+    var d = new Date();
+    return ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
+  }
+
+  // Catatan BBM dan servis milik satu kendaraan, untuk memeriksa urutan odometer
+  function catatanLain(vehicleId, kecualiBBMId) {
+    var hasil = [];
+    dataBBM.forEach(function (b) {
+      if (b.vehicleId === vehicleId && b.id !== kecualiBBMId) {
+        hasil.push({ tanggal: b.tanggal, waktu: b.waktu || null, km: b.km, sumber: "bbm" });
+      }
+    });
+    dataServis.forEach(function (s) {
+      if (s.vehicleId === vehicleId) {
+        hasil.push({ tanggal: s.tanggal, waktu: null, km: s.km, sumber: "servis" });
+      }
+    });
+    return hasil;
+  }
+
+  function pesanKonflik(k) {
+    var sumber = k.sumber === "bbm" ? "pengisian BBM" : "catatan servis";
+    var kapan = tanggalIndo(k.tanggal) + (k.waktu ? " pukul " + k.waktu : "");
+    if (k.arah === "rendah") {
+      return "Odometer lebih rendah dari " + sumber + " sebelumnya: " + angka(k.km) + " km pada " + kapan + ".";
+    }
+    return "Odometer lebih tinggi dari " + sumber + " yang lebih baru: " + angka(k.km) + " km pada " + kapan + ".";
+  }
+
+  // Teks hasil hitung untuk satu kartu pengisian
+  function teksHitung(inf) {
+    if (inf.status === "awal") {
+      return { kelas: "", utama: "", detail: "Titik awal. Perhitungan km/L dimulai dari pengisian penuh berikutnya." };
+    }
+    if (inf.status === "interval") {
+      var detail = angka(inf.jarak) + " km dengan " + literTeks(inf.liter) + " L";
+      if (inf.jumlahIsi > 1) { detail += " (termasuk " + (inf.jumlahIsi - 1) + " pengisian sebagian)"; }
+      if (!inf.wajar) { detail += ". Angka ini tampak tidak wajar. Mungkin ada pengisian yang belum dicatat atau odometer salah ketik."; }
+      return {
+        kelas: inf.wajar ? "ok" : "warn",
+        utama: desimal(inf.kmPerLiter, 1) + " km/L · " + rupiah(Math.round(inf.biayaPerKm)) + "/km",
+        detail: detail
+      };
+    }
+    if (inf.status === "tidakValid") {
+      return { kelas: "warn", utama: "", detail: "Tidak dihitung. Odometer tidak lebih tinggi dari pengisian penuh sebelumnya." };
+    }
+    if (inf.masuk) {
+      return { kelas: "", utama: "", detail: "Sebagian. Sudah ikut dihitung dalam interval penuh ke penuh." };
+    }
+    if (inf.alasan === "sebelumAwal") {
+      return { kelas: "", utama: "", detail: "Sebagian. Terjadi sebelum pengisian penuh pertama, jadi tidak dipakai untuk km/L." };
+    }
+    if (inf.alasan === "tidakValid") {
+      return { kelas: "", utama: "", detail: "Sebagian. Tidak dihitung karena interval penuh ke penuh tidak sah." };
+    }
+    return { kelas: "", utama: "", detail: "Sebagian. Akan dihitung setelah pengisian penuh berikutnya." };
+  }
+
+  function tampilkanBBM() {
+    var ada = dataKendaraan.length > 0;
+    var daftar = $("bbm-list");
+    var kosong = $("bbm-empty");
+    var ringkasan = $("bbm-summary");
+    var kartuHarga = $("bbm-harga");
+
+    $("bbm-picker").hidden = !ada;
+    $("btn-add-bbm").hidden = !ada;
+    daftar.innerHTML = "";
+
+    if (!ada) {
+      ringkasan.hidden = true;
+      kartuHarga.hidden = true;
+      $("bbm-empty-title").textContent = "Belum ada kendaraan";
+      $("bbm-empty-text").textContent = "Tambahkan kendaraan di tab Garasi, lalu catat pengisian BBM di sini.";
+      kosong.hidden = false;
+      return;
+    }
+
+    var masihAda = dataKendaraan.some(function (v) { return v.id === kendaraanTerpilih; });
+    if (!masihAda) { kendaraanTerpilih = dataKendaraan[0].id; }
+    isiPilihan(pilihBBM, kendaraanTerpilih);
+
+    var catatan = dataBBM.filter(function (b) { return b.vehicleId === kendaraanTerpilih; });
+    kosong.hidden = catatan.length > 0;
+    ringkasan.hidden = catatan.length === 0;
+    kartuHarga.hidden = catatan.length === 0;
+
+    if (catatan.length === 0) {
+      $("bbm-empty-title").textContent = "Belum ada catatan BBM";
+      $("bbm-empty-text").textContent = "Ketuk + Catat untuk mencatat pengisian BBM pertama kendaraan ini.";
+      return;
+    }
+
+    var hasil = GarageFuel.hitung(catatan);
+    var r = hasil.ringkasan;
+
+    $("bs-kmpl").textContent = r.kmPerLiter === null ? "Belum ada" : desimal(r.kmPerLiter, 1) + " km/L";
+    $("bs-perkm").textContent = r.biayaPerKm === null ? "Belum ada" : rupiah(Math.round(r.biayaPerKm)) + "/km";
+    $("bs-biaya").textContent = rupiah(r.totalBiaya);
+    $("bs-liter").textContent = literTeks(r.totalLiter) + " L";
+
+    var catatanHitung;
+    if (r.jumlahInterval > 0) {
+      catatanHitung = "Dihitung dari " + r.jumlahInterval + " interval penuh ke penuh (" + angka(r.jarakSah) +
+        " km). Pengisian sebagian ikut masuk interval, tidak dihitung sendiri.";
+    } else if (r.jumlahPenuh === 0) {
+      catatanHitung = "Belum ada pengisian penuh. km/L baru bisa dihitung setelah dua pengisian penuh berurutan.";
+    } else if (r.jumlahPenuh === 1) {
+      catatanHitung = "Pengisian penuh pertama menjadi titik awal. Catat pengisian penuh berikutnya untuk melihat km/L.";
+    } else {
+      catatanHitung = "Belum ada interval penuh ke penuh yang sah. Periksa odometer pengisian penuh.";
+    }
+    $("bbm-note").textContent = catatanHitung;
+
+    tampilkanHarga(catatan);
+
+    GarageFuel.urutkan(catatan).reverse().forEach(function (b) {
+      var inf = hasil.info[b.id] || {};
+      var kartu = buat("article", "card record");
+
+      var atas = buat("div", "r-top");
+      atas.appendChild(buat("h2", "r-title", tanggalIndo(b.tanggal) + (b.waktu ? " · " + b.waktu : "")));
+      atas.appendChild(buat("span", "r-cost", rupiah(b.total)));
+      kartu.appendChild(atas);
+
+      kartu.appendChild(buat("p", "r-meta", literTeks(b.liter) + " L × " + rupiah(b.hargaPerLiter) +
+        " · " + angka(b.km) + " km"));
+
+      var tag = buat("div", "r-tags");
+      tag.appendChild(buat("span", "badge" + (b.penuh ? " penuh" : ""), b.penuh ? "Penuh" : "Sebagian"));
+      tag.appendChild(buat("span", "badge", b.jenisBbm));
+      kartu.appendChild(tag);
+
+      var tempat = [b.spbu, b.lokasi].filter(Boolean).join(" · ");
+      if (tempat) { kartu.appendChild(buat("p", "r-note", tempat)); }
+
+      var h = teksHitung(inf);
+      var calc = buat("p", "r-calc" + (h.kelas ? " " + h.kelas : ""));
+      if (h.utama) {
+        calc.appendChild(buat("strong", "", h.utama));
+        calc.appendChild(document.createElement("br"));
+      }
+      calc.appendChild(document.createTextNode(h.detail));
+      kartu.appendChild(calc);
+
+      var aksi = buat("div", "r-actions");
+      var ubah = buat("button", "link-btn", "Ubah");
+      ubah.type = "button";
+      ubah.addEventListener("click", function () { bukaFormBBM(b); });
+      aksi.appendChild(ubah);
+      var hapus = buat("button", "link-btn", "Hapus");
+      hapus.type = "button";
+      hapus.addEventListener("click", function () {
+        if (confirm("Hapus catatan BBM ini?")) {
+          GarageDB.fuelRemove(b.id).then(muatUlang);
+        }
+      });
+      aksi.appendChild(hapus);
+      kartu.appendChild(aksi);
+
+      daftar.appendChild(kartu);
+    });
+  }
+
+  // ---------- Riwayat harga BBM ----------
+
+  function tampilkanHarga(catatan) {
+    var daftarJenis = GarageFuel.daftarJenis(catatan);
+    // Tanpa pilihan Anda, riwayat harga mengikuti jenis BBM pada pengisian terbaru
+    if (!jenisHargaManual || daftarJenis.indexOf(jenisHarga) === -1) { jenisHarga = daftarJenis[0]; }
+
+    var pilihJenis = $("h-jenis");
+    pilihJenis.innerHTML = "";
+    daftarJenis.forEach(function (j) {
+      var o = document.createElement("option");
+      o.value = j;
+      o.textContent = j;
+      pilihJenis.appendChild(o);
+    });
+    pilihJenis.value = jenisHarga;
+    $("h-jenis-box").hidden = daftarJenis.length < 2;
+
+    var rh = GarageFuel.riwayatHarga(catatan, jenisHarga);
+    var s = rh.ringkasan;
+    var stat = $("h-stats");
+    stat.innerHTML = "";
+    [["Terakhir", s.terakhir], ["Terendah", s.terendah], ["Tertinggi", s.tertinggi]].forEach(function (p) {
+      var kotak = document.createElement("div");
+      kotak.appendChild(buat("p", "k", p[0]));
+      kotak.appendChild(buat("p", "v", rupiah(p[1])));
+      stat.appendChild(kotak);
+    });
+
+    var teks;
+    if (s.selisih === null) {
+      teks = "Baru satu catatan harga untuk " + jenisHarga + ".";
+    } else if (s.selisih === 0) {
+      teks = "Harga sama dengan pengisian sebelumnya.";
+    } else {
+      teks = (s.selisih > 0 ? "Naik " : "Turun ") + rupiah(Math.abs(s.selisih)) + " dari pengisian sebelumnya.";
+    }
+    teks += " Rata-rata yang Anda bayar " + rupiah(Math.round(s.rataRata)) + " per liter.";
+    $("h-note").textContent = teks;
+    $("h-note").className = "note";
+
+    gambarGrafikHarga(rh.titik);
+  }
+
+  // Grafik garis harga per liter. Sumbu tanggal dan sumbu harga masing-masing memakai satu skala.
+  function gambarGrafikHarga(titik) {
+    var kotak = $("h-chart");
+    kotak.innerHTML = "";
+    if (titik.length < 2) { return; }
+
+    var NS = "http://www.w3.org/2000/svg";
+    var kiri = 46, kanan = 292, atas = 14, bawah = 88;
+
+    function el(nama, atribut, teks) {
+      var e = document.createElementNS(NS, nama);
+      Object.keys(atribut).forEach(function (k) { e.setAttribute(k, atribut[k]); });
+      if (teks !== undefined) { e.textContent = teks; }
+      return e;
+    }
+
+    var waktu = titik.map(function (t) { return new Date(t.tanggal + "T" + t.waktu + ":00").getTime(); });
+    var t0 = waktu[0];
+    var t1 = waktu[waktu.length - 1];
+    var hMin = titik[0].harga;
+    var hMax = titik[0].harga;
+    titik.forEach(function (t) {
+      if (t.harga < hMin) { hMin = t.harga; }
+      if (t.harga > hMax) { hMax = t.harga; }
+    });
+    var rentang = hMax - hMin;
+
+    function px(i) { return t1 === t0 ? (kiri + kanan) / 2 : kiri + (waktu[i] - t0) / (t1 - t0) * (kanan - kiri); }
+    function py(h) { return rentang === 0 ? (atas + bawah) / 2 : bawah - (h - hMin) / rentang * (bawah - atas); }
+
+    var svg = el("svg", { viewBox: "0 0 300 110", role: "img", "aria-label": "Grafik harga BBM per liter" });
+
+    // Garis bantu dan angka harga di sisi kiri
+    var garis = rentang === 0 ? [hMax] : [hMax, hMin];
+    garis.forEach(function (h) {
+      svg.appendChild(el("line", { "class": "grid", x1: kiri, x2: kanan, y1: py(h), y2: py(h) }));
+      svg.appendChild(el("text", { "class": "t", x: kiri - 6, y: py(h) + 3, "text-anchor": "end" }, angka(h)));
+    });
+
+    svg.appendChild(el("polyline", {
+      "class": "line",
+      points: titik.map(function (t, i) { return px(i).toFixed(1) + "," + py(t.harga).toFixed(1); }).join(" ")
+    }));
+    titik.forEach(function (t, i) {
+      var akhir = i === titik.length - 1;
+      svg.appendChild(el("circle", { "class": "dot" + (akhir ? " last" : ""), cx: px(i).toFixed(1), cy: py(t.harga).toFixed(1), r: akhir ? 4.5 : 3 }));
+    });
+
+    svg.appendChild(el("text", { "class": "t", x: kiri, y: 106, "text-anchor": "start" }, tanggalIndo(titik[0].tanggal)));
+    svg.appendChild(el("text", { "class": "t", x: kanan, y: 106, "text-anchor": "end" }, tanggalIndo(titik[titik.length - 1].tanggal)));
+
+    kotak.appendChild(svg);
+  }
+
+  pilihBBM.addEventListener("change", function () {
+    kendaraanTerpilih = parseInt(pilihBBM.value, 10);
+    jenisHargaManual = false;
+    tampilkanServis();
+    tampilkanBBM();
+  });
+
+  $("h-jenis").addEventListener("change", function () {
+    jenisHarga = $("h-jenis").value;
+    jenisHargaManual = true;
+    tampilkanBBM();
+  });
+
+  // ---------- Formulir catat / ubah BBM ----------
+
+  var sheetBBM = $("sheet-bbm");
+  var formBBM = $("bbm-form");
+  var errorBBM = $("bbm-error");
+  var sedangUbahBBM = null; // catatan yang sedang diubah (null = menambah baru)
+
+  function bbmTerakhir(vehicleId) {
+    var d = dataBBM.filter(function (b) { return b.vehicleId === vehicleId; });
+    if (d.length === 0) { return null; }
+    var u = GarageFuel.urutkan(d);
+    return u[u.length - 1];
+  }
+
+  // Mengisi SPBU, jenis BBM, dan harga dari pengisian terakhir kendaraan itu (hemat mengetik)
+  function isiBawaanBBM(vehicleId) {
+    var t = bbmTerakhir(vehicleId);
+    if (!t) { return; }
+    $("g-jenis").value = t.jenisBbm;
+    $("g-spbu").value = t.spbu || "";
+    $("g-lokasi").value = t.lokasi || "";
+    $("g-harga").value = String(t.hargaPerLiter);
+    perbaruiTotalBBM();
+  }
+
+  function perbaruiTotalBBM() {
+    var liter = bacaDesimal($("g-liter").value);
+    var harga = bacaBulat($("g-harga").value);
+    if (isNaN(liter) || isNaN(harga)) {
+      $("g-total").textContent = "Rp 0";
+    } else {
+      $("g-total").textContent = rupiah(GarageFuel.hitungTotal(Math.round(liter * 100) / 100, harga));
+    }
+  }
+
+  function bukaFormBBM(b) {
+    if (dataKendaraan.length === 0) { return; }
+    sedangUbahBBM = b || null;
+    formBBM.reset();
+    errorBBM.hidden = true;
+    $("bbm-title").textContent = b ? "Ubah Pengisian BBM" : "Catat Pengisian BBM";
+    isiPilihan($("g-kendaraan"), b ? b.vehicleId : kendaraanTerpilih);
+
+    if (b) {
+      $("g-tanggal").value = b.tanggal;
+      $("g-waktu").value = b.waktu || "00:00";
+      $("g-km").value = b.km;
+      $("g-spbu").value = b.spbu || "";
+      $("g-lokasi").value = b.lokasi || "";
+      $("g-jenis").value = b.jenisBbm;
+      $("g-liter").value = String(b.liter).replace(".", ",");
+      $("g-harga").value = String(b.hargaPerLiter);
+      $("g-penuh").value = b.penuh ? "penuh" : "sebagian";
+      perbaruiTotalBBM();
+      bukaSheet(sheetBBM, null);
+    } else {
+      $("g-tanggal").value = tanggalHariIni();
+      $("g-waktu").value = jamSekarang();
+      isiBawaanBBM(kendaraanTerpilih);
+      perbaruiTotalBBM();
+      bukaSheet(sheetBBM, $("g-km"));
+    }
+  }
+
+  function simpanBBM() {
+    var vehicleId = parseInt($("g-kendaraan").value, 10);
+    var tanggal = $("g-tanggal").value;
+    var waktu = $("g-waktu").value;
+    var km = parseInt($("g-km").value, 10);
+    var liter = bacaDesimal($("g-liter").value);
+    var harga = bacaBulat($("g-harga").value);
+
+    if (isNaN(vehicleId)) {
+      pesan(errorBBM, "Pilih kendaraan dulu.", "bad");
+      return;
+    }
+    if (!tanggal) {
+      pesan(errorBBM, "Isi tanggal pengisian.", "bad");
+      return;
+    }
+    if (tanggal > tanggalHariIni()) {
+      pesan(errorBBM, "Tanggal pengisian tidak boleh di masa depan.", "bad");
+      return;
+    }
+    if (!waktu) {
+      pesan(errorBBM, "Isi jam pengisian.", "bad");
+      return;
+    }
+    if (isNaN(km) || km < 0 || km > 2000000) {
+      pesan(errorBBM, "Isi odometer dengan angka antara 0 dan 2.000.000 km.", "bad");
+      return;
+    }
+    if (isNaN(liter) || liter < 0.1 || liter > 500) {
+      pesan(errorBBM, "Isi jumlah liter antara 0,1 dan 500. Gunakan koma untuk desimal, contoh 35,5.", "bad");
+      return;
+    }
+    if (isNaN(harga) || harga < 100 || harga > 1000000) {
+      pesan(errorBBM, "Isi harga per liter dalam rupiah, contoh 12500.", "bad");
+      return;
+    }
+    liter = Math.round(liter * 100) / 100;
+
+    var konflik = GarageFuel.cekUrutanKm(
+      { tanggal: tanggal, waktu: waktu, km: km },
+      catatanLain(vehicleId, sedangUbahBBM ? sedangUbahBBM.id : null)
+    );
+    if (konflik) {
+      pesan(errorBBM, pesanKonflik(konflik), "bad");
+      return;
+    }
+
+    var rekam = sedangUbahBBM ? Object.assign({}, sedangUbahBBM) : { dibuat: Date.now() };
+    rekam.vehicleId = vehicleId;
+    rekam.tanggal = tanggal;
+    rekam.waktu = waktu;
+    rekam.km = km;
+    rekam.spbu = $("g-spbu").value.trim();
+    rekam.lokasi = $("g-lokasi").value.trim();
+    rekam.jenisBbm = $("g-jenis").value;
+    rekam.liter = liter;
+    rekam.hargaPerLiter = harga;
+    rekam.total = GarageFuel.hitungTotal(liter, harga);
+    rekam.penuh = $("g-penuh").value === "penuh";
+
+    GarageDB.fuelSave(rekam).then(function () {
+      kendaraanTerpilih = vehicleId;
+      tutupSheet(sheetBBM);
+      return muatUlang();
+    }).catch(function () {
+      pesan(errorBBM, "Gagal menyimpan. Coba lagi.", "bad");
+    });
+  }
+
+  $("btn-add-bbm").addEventListener("click", function () { bukaFormBBM(null); });
+  $("btn-cancel-bbm").addEventListener("click", function () { tutupSheet(sheetBBM); });
+  sheetBBM.addEventListener("click", function (e) {
+    if (e.target === sheetBBM) { tutupSheet(sheetBBM); }
+  });
+  formBBM.addEventListener("submit", function (e) {
+    e.preventDefault();
+    simpanBBM();
+  });
+  formBBM.addEventListener("input", function () { errorBBM.hidden = true; });
+  $("g-liter").addEventListener("input", perbaruiTotalBBM);
+  $("g-harga").addEventListener("input", perbaruiTotalBBM);
+  $("g-kendaraan").addEventListener("change", function () {
+    if (!sedangUbahBBM) { isiBawaanBBM(parseInt($("g-kendaraan").value, 10)); }
+  });
 
   // ---------- Cadangkan data ----------
 
@@ -701,7 +1154,8 @@
         $("r-file").value = "";
         $("r-sandi").value = "";
         pesan(restoreMsg, "Berhasil. " + jumlah.kendaraan + " kendaraan, " +
-          jumlah.servis + " catatan servis, dan " + jumlah.foto + " foto dipulihkan.", "good");
+          jumlah.servis + " catatan servis, " + jumlah.bbm + " catatan BBM, dan " +
+          jumlah.foto + " foto dipulihkan.", "good");
         return muatUlang();
       }).catch(function (err) {
         var kode = err && err.message;

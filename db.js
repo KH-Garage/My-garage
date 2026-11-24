@@ -1,17 +1,18 @@
 // MY GARAGE - db.js (database di dalam perangkat Anda: IndexedDB)
 // Data tidak pernah dikirim ke internet. Semuanya tersimpan di iPhone Anda.
 //
-// Tiga "laci" data:
+// Empat "laci" data:
 //   vehicles    = daftar kendaraan
 //   services    = catatan servis (menunjuk ke kendaraan lewat vehicleId)
 //   attachments = foto (menunjuk ke kendaraan lewat vehicleId)
+//   fuel        = catatan pengisian BBM (menunjuk ke kendaraan lewat vehicleId)
 //
 // Aturan upgrade: laci lama TIDAK PERNAH dihapus atau diubah isinya.
 // Versi baru hanya menambah laci baru, jadi data lama selalu aman.
 
 var GarageDB = (function () {
   var DB_NAME = "my-garage-db";
-  var DB_VERSION = 3;
+  var DB_VERSION = 4;
   var dbPromise = null;
 
   // Membuka database (dan membuat laci yang belum ada)
@@ -30,6 +31,10 @@ var GarageDB = (function () {
         if (!db.objectStoreNames.contains("attachments")) {
           var lampiran = db.createObjectStore("attachments", { keyPath: "id", autoIncrement: true });
           lampiran.createIndex("vehicleId", "vehicleId");
+        }
+        if (!db.objectStoreNames.contains("fuel")) {
+          var bbm = db.createObjectStore("fuel", { keyPath: "id", autoIncrement: true });
+          bbm.createIndex("vehicleId", "vehicleId");
         }
       };
       req.onsuccess = function () {
@@ -112,14 +117,20 @@ var GarageDB = (function () {
       });
     },
 
-    // Menghapus kendaraan DAN semua catatan servis serta fotonya
+    // Menghapus kendaraan DAN semua catatan servis, BBM, serta fotonya
     remove: function (id) {
       return open().then(function (db) {
         return new Promise(function (resolve, reject) {
-          var tx = db.transaction(["vehicles", "services", "attachments"], "readwrite");
+          var tx = db.transaction(["vehicles", "services", "attachments", "fuel"], "readwrite");
           var servis = tx.objectStore("services");
           var laciFoto = tx.objectStore("attachments");
+          var laciBBM = tx.objectStore("fuel");
           tx.objectStore("vehicles").delete(id);
+
+          var bacaBBM = laciBBM.index("vehicleId").getAllKeys(id);
+          bacaBBM.onsuccess = function () {
+            bacaBBM.result.forEach(function (kunci) { laciBBM.delete(kunci); });
+          };
 
           var bacaServis = servis.getAll();
           bacaServis.onsuccess = function () {
@@ -175,6 +186,47 @@ var GarageDB = (function () {
       return run("services", "readwrite", function (store) { return store.delete(id); });
     },
 
+    // ----- Catatan BBM -----
+    fuelAll: function () {
+      return run("fuel", "readonly", function (store) { return store.getAll(); });
+    },
+
+    // Menyimpan pengisian BBM baru (tanpa id) atau perubahan (dengan id).
+    // Jika odometernya lebih tinggi dari odometer kendaraan, odometer kendaraan ikut naik.
+    // Odometer kendaraan tidak pernah diturunkan otomatis. Semuanya dalam satu transaksi.
+    // Hasil: id catatan.
+    fuelSave: function (record) {
+      return open().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          var tx = db.transaction(["fuel", "vehicles"], "readwrite");
+          var laciKendaraan = tx.objectStore("vehicles");
+          var laciBBM = tx.objectStore("fuel");
+          var hasilId = null;
+
+          var simpan = (record.id === undefined) ? laciBBM.add(record) : laciBBM.put(record);
+          simpan.onsuccess = function () { hasilId = simpan.result; };
+
+          var baca = laciKendaraan.get(record.vehicleId);
+          baca.onsuccess = function () {
+            var v = baca.result;
+            if (v && (typeof v.odometer !== "number" || record.km > v.odometer)) {
+              v.odometer = record.km;
+              v.odometerWaktu = Date.now();
+              laciKendaraan.put(v);
+            }
+          };
+
+          tx.oncomplete = function () { resolve(hasilId); };
+          tx.onerror = function () { reject(tx.error); };
+          tx.onabort = function () { reject(tx.error); };
+        });
+      });
+    },
+
+    fuelRemove: function (id) {
+      return run("fuel", "readwrite", function (store) { return store.delete(id); });
+    },
+
     // ----- Foto -----
     attachmentGet: function (id) {
       return run("attachments", "readonly", function (store) { return store.get(id); });
@@ -184,19 +236,22 @@ var GarageDB = (function () {
     },
 
     // Mengosongkan semua laci lalu mengisinya dengan data baru (dipakai saat memulihkan cadangan)
-    replaceAll: function (vehicles, services, attachments) {
+    replaceAll: function (vehicles, services, attachments, fuel) {
       return open().then(function (db) {
         return new Promise(function (resolve, reject) {
-          var tx = db.transaction(["vehicles", "services", "attachments"], "readwrite");
+          var tx = db.transaction(["vehicles", "services", "attachments", "fuel"], "readwrite");
           var laciKendaraan = tx.objectStore("vehicles");
           var laciServis = tx.objectStore("services");
           var laciFoto = tx.objectStore("attachments");
+          var laciBBM = tx.objectStore("fuel");
           laciKendaraan.clear();
           laciServis.clear();
           laciFoto.clear();
+          laciBBM.clear();
           vehicles.forEach(function (item) { laciKendaraan.put(item); });
           (services || []).forEach(function (item) { laciServis.put(item); });
           (attachments || []).forEach(function (item) { laciFoto.put(item); });
+          (fuel || []).forEach(function (item) { laciBBM.put(item); });
           tx.oncomplete = function () { resolve(); };
           tx.onerror = function () { reject(tx.error); };
           tx.onabort = function () { reject(tx.error); };

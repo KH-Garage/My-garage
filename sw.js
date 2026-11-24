@@ -1,13 +1,14 @@
 // MY GARAGE - sw.js (service worker: membuat aplikasi bisa dibuka tanpa internet)
 
-// Setiap kali Anda mengubah file aplikasi, naikkan nomor ini (v6, v7, ...)
-var CACHE_NAME = "my-garage-v5";
+// Setiap kali Anda mengubah file aplikasi, naikkan nomor ini (v7, v8, ...)
+var CACHE_NAME = "my-garage-v6";
 
 var FILES = [
   "./",
   "./index.html",
   "./style.css",
   "./db.js",
+  "./fuel.js",
   "./backup.js",
   "./app.js",
   "./manifest.json",

@@ -45,6 +45,57 @@
       <p id="today" class="today"></p>
     </div>
 
+    <!-- ===== Layar BBM ===== -->
+    <div id="view-bbm" class="view" hidden>
+      <div class="section-head">
+        <h2>Isi BBM</h2>
+        <button id="btn-add-bbm" class="btn small" type="button">+ Catat</button>
+      </div>
+
+      <div id="bbm-picker" class="form picker">
+        <label for="b-pilih">Kendaraan</label>
+        <select id="b-pilih"></select>
+      </div>
+
+      <section id="bbm-summary" class="card summary" hidden>
+        <div>
+          <p class="k">Rata-rata</p>
+          <p class="v" id="bs-kmpl"></p>
+        </div>
+        <div>
+          <p class="k">BBM per km</p>
+          <p class="v" id="bs-perkm"></p>
+        </div>
+        <div>
+          <p class="k">Total biaya BBM</p>
+          <p class="v" id="bs-biaya"></p>
+        </div>
+        <div>
+          <p class="k">Total BBM</p>
+          <p class="v" id="bs-liter"></p>
+        </div>
+        <p id="bbm-note" class="note span2"></p>
+      </section>
+
+      <section id="bbm-harga" class="card form" hidden>
+        <h2>Riwayat Harga</h2>
+        <div id="h-jenis-box" hidden>
+          <label for="h-jenis">Jenis BBM</label>
+          <select id="h-jenis"></select>
+        </div>
+        <div id="h-stats" class="stats3"></div>
+        <div id="h-chart" class="chart"></div>
+        <p id="h-note" class="note"></p>
+      </section>
+
+      <section id="bbm-list" class="list"></section>
+
+      <section id="bbm-empty" class="card empty" hidden>
+        <h2 id="bbm-empty-title"></h2>
+        <p id="bbm-empty-text"></p>
+      </section>
+    </div>
+
     <!-- ===== Layar Servis ===== -->
     <div id="view-servis" class="view" hidden>
       <div class="section-head">
@@ -84,7 +135,7 @@
 
       <section class="card form">
         <h2>Cadangkan Data</h2>
-        <p>Buat satu file cadangan yang dikunci dengan sandi. Isinya kendaraan dan catatan servis. Simpan di aplikasi Berkas.</p>
+        <p>Buat satu file cadangan yang dikunci dengan sandi. Isinya kendaraan, foto, catatan BBM, dan catatan servis. Simpan di aplikasi Berkas.</p>
 
         <label for="b-sandi">Sandi cadangan</label>
         <input id="b-sandi" type="password" autocomplete="off" placeholder="Minimal 8 karakter">
@@ -123,6 +174,7 @@
 
   <nav class="tabbar">
     <button class="tab active" type="button" data-view="garasi">Garasi</button>
+    <button class="tab" type="button" data-view="bbm">BBM</button>
     <button class="tab" type="button" data-view="servis">Servis</button>
     <button class="tab soon" type="button" aria-disabled="true">Biaya</button>
     <button class="tab" type="button" data-view="pengaturan">Pengaturan</button>
@@ -191,6 +243,71 @@
     </div>
   </div>
 
+  <!-- ===== Formulir catat BBM ===== -->
+  <div id="sheet-bbm" class="sheet" hidden>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="bbm-title">
+      <h2 id="bbm-title">Catat Pengisian BBM</h2>
+
+      <form id="bbm-form" class="form" autocomplete="off">
+        <label for="g-kendaraan">Kendaraan</label>
+        <select id="g-kendaraan"></select>
+
+        <label for="g-tanggal">Tanggal</label>
+        <input id="g-tanggal" type="date" required>
+
+        <label for="g-waktu">Jam</label>
+        <input id="g-waktu" type="time" required>
+
+        <label for="g-km">Odometer (km)</label>
+        <input id="g-km" type="number" inputmode="numeric" placeholder="Contoh: 45200" required>
+
+        <label for="g-spbu">Nama SPBU (boleh kosong)</label>
+        <input id="g-spbu" type="text" maxlength="60" placeholder="Contoh: Pertamina 34.12345">
+
+        <label for="g-lokasi">Lokasi (boleh kosong)</label>
+        <input id="g-lokasi" type="text" maxlength="60" placeholder="Contoh: Jl. Sudirman, Jakarta">
+
+        <label for="g-jenis">Jenis BBM</label>
+        <select id="g-jenis">
+          <option>Pertalite</option>
+          <option>Pertamax</option>
+          <option>Pertamax Turbo</option>
+          <option>Pertamax Green 95</option>
+          <option>Biosolar</option>
+          <option>Dexlite</option>
+          <option>Pertamina Dex</option>
+          <option>Shell Super</option>
+          <option>Shell V-Power</option>
+          <option>BP 92</option>
+          <option>Lainnya</option>
+        </select>
+
+        <label for="g-liter">Jumlah (liter)</label>
+        <input id="g-liter" type="text" inputmode="decimal" placeholder="Contoh: 35,5" required>
+
+        <label for="g-harga">Harga per liter (Rp)</label>
+        <input id="g-harga" type="text" inputmode="numeric" placeholder="Contoh: 12500" required>
+
+        <p class="lbl">Total biaya</p>
+        <p id="g-total" class="total-box">Rp 0</p>
+
+        <label for="g-penuh">Tangki</label>
+        <select id="g-penuh">
+          <option value="penuh">Penuh (diisi sampai penuh)</option>
+          <option value="sebagian">Sebagian</option>
+        </select>
+        <p class="note hint">Pilih Penuh hanya jika tangki diisi sampai penuh. Angka km/L hanya dihitung dari pengisian penuh ke penuh berikutnya. Pengisian sebagian tetap tersimpan dan ikut dalam total biaya.</p>
+
+        <p id="bbm-error" class="note bad" hidden></p>
+
+        <div class="form-actions">
+          <button class="btn primary" type="submit">Simpan</button>
+          <button class="btn" type="button" id="btn-cancel-bbm">Batal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- ===== Formulir catat servis ===== -->
   <div id="sheet-servis" class="sheet" hidden>
     <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-servis-title">
@@ -235,6 +352,7 @@
   </div>
 
   <script src="db.js"></script>
+  <script src="fuel.js"></script>
   <script src="backup.js"></script>
   <script src="app.js"></script>
 </body>

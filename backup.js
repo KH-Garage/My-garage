@@ -2,13 +2,13 @@
 // Sandi tidak pernah disimpan atau dikirim ke mana pun.
 // Kunci: PBKDF2 (250.000 putaran) -> AES-GCM 256 bit.
 //
-// Format cadangan (versi 3):
-//   data     = kendaraan, catatan servis, dan daftar foto (terkunci)
+// Format cadangan (versi 4):
+//   data     = kendaraan, catatan servis, catatan BBM, dan daftar foto (terkunci)
 //   lampiran = setiap foto dikunci sendiri-sendiri
-// Format versi 1 dan 2 (tanpa foto) tetap bisa dipulihkan.
+// Format versi 1, 2, dan 3 (tanpa BBM atau tanpa foto) tetap bisa dipulihkan.
 
 var GarageBackup = (function () {
-  var VERSI_SAAT_INI = 3;
+  var VERSI_SAAT_INI = 4;
   var enc = new TextEncoder();
   var dec = new TextDecoder();
 
@@ -68,6 +68,21 @@ var GarageBackup = (function () {
       typeof item.biaya === "number";
   }
 
+  function validBBM(item) {
+    return item && typeof item === "object" &&
+      typeof item.id === "number" &&
+      typeof item.vehicleId === "number" &&
+      typeof item.tanggal === "string" && /^\d{4}-\d{2}-\d{2}$/.test(item.tanggal) &&
+      (item.waktu === undefined || item.waktu === null || typeof item.waktu === "string") &&
+      typeof item.km === "number" &&
+      typeof item.liter === "number" && item.liter > 0 &&
+      typeof item.hargaPerLiter === "number" &&
+      typeof item.total === "number" &&
+      typeof item.penuh === "boolean" &&
+      typeof item.jenisBbm === "string" &&
+      teksAtauKosong(item.spbu) && teksAtauKosong(item.lokasi);
+  }
+
   function validInfoFoto(item) {
     return item && typeof item === "object" &&
       typeof item.id === "number" &&
@@ -83,11 +98,13 @@ var GarageBackup = (function () {
     return Promise.all([
       GarageDB.all(),
       GarageDB.serviceAll(),
-      GarageDB.attachmentAll()
+      GarageDB.attachmentAll(),
+      GarageDB.fuelAll()
     ]).then(function (hasil) {
       var kendaraan = hasil[0];
       var servis = hasil[1];
       var foto = hasil[2];
+      var bbm = hasil[3];
       var garam = crypto.getRandomValues(new Uint8Array(16));
 
       return buatKunci(sandi, garam).then(function (kunci) {
@@ -102,7 +119,7 @@ var GarageBackup = (function () {
           };
         });
         var iv = crypto.getRandomValues(new Uint8Array(12));
-        var isi = enc.encode(JSON.stringify({ kendaraan: kendaraan, servis: servis, lampiran: info }));
+        var isi = enc.encode(JSON.stringify({ kendaraan: kendaraan, servis: servis, bbm: bbm, lampiran: info }));
 
         return crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, kunci, isi).then(function (terkunci) {
           var paket = {
@@ -139,7 +156,7 @@ var GarageBackup = (function () {
   }
 
   // ---------- Memulihkan cadangan ----------
-  // Hasil: { kendaraan, servis, foto } (jumlah masing-masing)
+  // Hasil: { kendaraan, servis, bbm, foto } (jumlah masing-masing)
   // Galat: "format" (bukan cadangan MY GARAGE), "versi" (dibuat versi aplikasi yang lebih baru),
   //        "sandi" (sandi salah), "rusak" (foto dalam cadangan rusak).
   // Data saat ini baru diganti SETELAH semuanya berhasil dibuka dan diperiksa.
@@ -172,12 +189,21 @@ var GarageBackup = (function () {
       if (!isi || !Array.isArray(isi.kendaraan)) { throw new Error("format"); }
 
       var servis = isi.servis === undefined ? [] : isi.servis;
+      var bbm = isi.bbm === undefined ? [] : isi.bbm;
       var info = isi.lampiran === undefined ? [] : isi.lampiran;
       var entri = paket.lampiran === undefined ? [] : paket.lampiran;
 
-      if (!Array.isArray(servis) || !Array.isArray(info) || !Array.isArray(entri) ||
+      if (!Array.isArray(servis) || !Array.isArray(bbm) || !Array.isArray(info) || !Array.isArray(entri) ||
           !isi.kendaraan.every(validKendaraan) || !servis.every(validServis) ||
+          !bbm.every(validBBM) ||
           !info.every(validInfoFoto) || info.length !== entri.length) {
+        throw new Error("format");
+      }
+
+      // Setiap catatan BBM harus menunjuk ke kendaraan yang ada di cadangan
+      var idKendaraan = {};
+      isi.kendaraan.forEach(function (v) { idKendaraan[v.id] = true; });
+      if (!bbm.every(function (b) { return idKendaraan[b.vehicleId] === true; })) {
         throw new Error("format");
       }
 
@@ -221,9 +247,9 @@ var GarageBackup = (function () {
         isi.kendaraan.forEach(function (v) {
           if (v.fotoId && !adaFoto[v.fotoId]) { v.fotoId = null; }
         });
-        return GarageDB.replaceAll(isi.kendaraan, servis, hasilFoto);
+        return GarageDB.replaceAll(isi.kendaraan, servis, hasilFoto, bbm);
       }).then(function () {
-        return { kendaraan: isi.kendaraan.length, servis: servis.length, foto: hasilFoto.length };
+        return { kendaraan: isi.kendaraan.length, servis: servis.length, bbm: bbm.length, foto: hasilFoto.length };
       });
     });
   }
