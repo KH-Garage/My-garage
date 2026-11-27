@@ -29,6 +29,34 @@
         <button class="btn small js-add" type="button">+ Tambah</button>
       </div>
 
+      <section id="doc-banner" class="card banner" hidden>
+        <h2 class="sched-title">Pengingat Dokumen</h2>
+        <div id="doc-banner-list" class="sched-list"></div>
+        <p class="note hint">Pengingat hanya tampil saat aplikasi dibuka. Aplikasi ini tidak mengirim notifikasi otomatis di luar aplikasi.</p>
+      </section>
+
+      <button id="btn-ke-pengeluaran" class="card shortcut" type="button" hidden>
+        <span class="sc-ikon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>
+        </span>
+        <span class="sc-teks">
+          <span class="sc-judul">Pengeluaran</span>
+          <span id="sc-info" class="sc-info"></span>
+        </span>
+        <span class="sc-panah" aria-hidden="true">&rsaquo;</span>
+      </button>
+
+      <button id="btn-ke-analitik" class="card shortcut" type="button" hidden>
+        <span class="sc-ikon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 12l4-4M7 16h.01M12 5v1.5M5 12h1.5M19 12h-1.5"/></svg>
+        </span>
+        <span class="sc-teks">
+          <span class="sc-judul">Analitik</span>
+          <span class="sc-info">Konsumsi BBM, biaya per km, servis, dan perbandingan</span>
+        </span>
+        <span class="sc-panah" aria-hidden="true">&rsaquo;</span>
+      </button>
+
       <section id="vehicle-list" class="list"></section>
 
       <section id="empty" class="card empty" hidden>
@@ -117,6 +145,20 @@
           <p class="k">Odometer</p>
           <p class="v" id="sum-km"></p>
         </div>
+        <div>
+          <p class="k">Jumlah servis</p>
+          <p class="v" id="sum-n"></p>
+        </div>
+        <div>
+          <p class="k">Servis terakhir</p>
+          <p class="v" id="sum-last"></p>
+        </div>
+      </section>
+
+      <section id="service-sched" class="card" hidden>
+        <h2 class="sched-title">Jadwal Perawatan</h2>
+        <div id="sched-list" class="sched-list"></div>
+        <p class="note hint">Pengingat hanya tampil di sini saat aplikasi dibuka. iPhone tidak mengizinkan aplikasi seperti ini membunyikan notifikasi sendiri.</p>
       </section>
 
       <section id="service-list" class="list"></section>
@@ -127,6 +169,404 @@
       </section>
     </div>
 
+    <!-- ===== Layar Cuci ===== -->
+    <div id="view-cuci" class="view" hidden>
+      <div class="section-head">
+        <h2>Riwayat Cuci</h2>
+        <button id="btn-add-cuci" class="btn small" type="button">+ Catat</button>
+      </div>
+
+      <div id="cuci-picker" class="form picker">
+        <label for="c-pilih">Kendaraan</label>
+        <select id="c-pilih"></select>
+      </div>
+
+      <section id="cuci-summary" class="card summary" hidden>
+        <div class="wide">
+          <p class="k">Cuci terakhir</p>
+          <p class="v" id="cs-last"></p>
+        </div>
+        <div>
+          <p class="k">Sejak cuci terakhir</p>
+          <p class="v" id="cs-since"></p>
+        </div>
+        <div>
+          <p class="k">Rata-rata jarak</p>
+          <p class="v" id="cs-avg"></p>
+        </div>
+        <div>
+          <p class="k">Jumlah cuci</p>
+          <p class="v" id="cs-n"></p>
+        </div>
+        <div>
+          <p class="k">Rata-rata biaya</p>
+          <p class="v" id="cs-avgcost"></p>
+        </div>
+        <div>
+          <p class="k">Bulan ini</p>
+          <p class="v" id="cs-month"></p>
+        </div>
+        <div>
+          <p class="k">Tahun ini</p>
+          <p class="v" id="cs-year"></p>
+        </div>
+        <div class="wide">
+          <p class="k">Total biaya</p>
+          <p class="v" id="cs-total"></p>
+        </div>
+      </section>
+
+      <section id="cuci-list" class="list"></section>
+
+      <section id="cuci-empty" class="card empty" hidden>
+        <h2 id="cuci-empty-title"></h2>
+        <p id="cuci-empty-text"></p>
+      </section>
+    </div>
+
+    <!-- ===== Layar Dokumen ===== -->
+    <div id="view-dokumen" class="view" hidden>
+      <div class="section-head">
+        <h2>Dokumen</h2>
+        <button id="btn-add-dok" class="btn small" type="button">+ Tambah</button>
+      </div>
+
+      <div id="dok-picker" class="form picker">
+        <label for="d-pilih">Kendaraan</label>
+        <select id="d-pilih"></select>
+      </div>
+
+      <section id="dok-summary" class="card summary" hidden>
+        <div>
+          <p class="k">Aktif</p>
+          <p class="v" id="ds-aktif"></p>
+        </div>
+        <div>
+          <p class="k">Segera kedaluwarsa</p>
+          <p class="v" id="ds-segera"></p>
+        </div>
+        <div>
+          <p class="k">Kedaluwarsa</p>
+          <p class="v" id="ds-lewat"></p>
+        </div>
+        <div>
+          <p class="k">Jumlah dokumen</p>
+          <p class="v" id="ds-n"></p>
+        </div>
+      </section>
+
+      <section id="dok-ingat" class="card" hidden>
+        <h2 class="sched-title">Pengingat</h2>
+        <div id="dok-ingat-list" class="sched-list"></div>
+        <p class="note hint">Pengingat muncul di sini dan di tab Garasi saat aplikasi dibuka: 30, 14, dan 7 hari sebelum jatuh tempo, lalu "Terlambat" bila terlewat. Tidak ada notifikasi otomatis di luar aplikasi.</p>
+      </section>
+
+      <section id="dok-list" class="list"></section>
+
+      <section id="dok-empty" class="card empty" hidden>
+        <h2 id="dok-empty-title"></h2>
+        <p id="dok-empty-text"></p>
+      </section>
+    </div>
+
+    <!-- ===== Layar Pengeluaran (dibuka dari Garasi) ===== -->
+    <div id="view-pengeluaran" class="view" hidden>
+      <div class="section-head">
+        <h2>Pengeluaran</h2>
+        <button id="btn-add-biaya" class="btn small" type="button">+ Catat</button>
+      </div>
+      <button id="btn-kembali-garasi" class="link-btn back" type="button">&lsaquo; Kembali ke Garasi</button>
+
+      <section class="card form filter-card">
+        <label for="x-kendaraan">Kendaraan</label>
+        <select id="x-kendaraan"></select>
+
+        <label for="x-periode">Periode</label>
+        <select id="x-periode">
+          <option value="semua">Semua waktu</option>
+          <option value="bulan-ini">Bulan ini</option>
+          <option value="bulan-lalu">Bulan lalu</option>
+          <option value="30-hari">30 hari terakhir</option>
+          <option value="tahun-ini">Tahun ini</option>
+          <option value="bulan">Pilih bulan dan tahun</option>
+          <option value="rentang">Rentang tanggal</option>
+        </select>
+
+        <div id="x-bulan-box" class="fld" hidden>
+          <label for="x-bulan">Bulan dan tahun</label>
+          <input id="x-bulan" type="month">
+        </div>
+        <div id="x-rentang-box" class="fld" hidden>
+          <label for="x-dari">Dari tanggal</label>
+          <input id="x-dari" type="date">
+          <label for="x-sampai">Sampai tanggal</label>
+          <input id="x-sampai" type="date">
+        </div>
+        <p id="x-periode-info" class="note hint"></p>
+      </section>
+
+      <section id="x-kosong" class="card empty" hidden>
+        <h2 id="x-kosong-judul"></h2>
+        <p id="x-kosong-teks"></p>
+      </section>
+
+      <div id="x-isi" class="stack" hidden>
+        <section class="card summary">
+          <div>
+            <p class="k">Bulan ini</p>
+            <p class="v" id="xs-bulan"></p>
+          </div>
+          <div>
+            <p class="k">Tahun ini</p>
+            <p class="v" id="xs-tahun"></p>
+          </div>
+          <div class="wide">
+            <p class="k">Keseluruhan</p>
+            <p class="v" id="xs-semua"></p>
+          </div>
+          <div>
+            <p class="k">Periode terpilih</p>
+            <p class="v" id="xs-periode"></p>
+          </div>
+          <div>
+            <p class="k">Rata-rata bulanan</p>
+            <p class="v" id="xs-rata"></p>
+          </div>
+          <div>
+            <p class="k">Jumlah transaksi</p>
+            <p class="v" id="xs-n"></p>
+          </div>
+          <div>
+            <p class="k">Kategori terbesar</p>
+            <p class="v" id="xs-terbesar"></p>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2 class="sched-title">Grafik Pengeluaran</h2>
+          <div class="seg" role="group" aria-label="Rentang grafik">
+            <button type="button" class="seg-btn" data-mode="hari">Harian</button>
+            <button type="button" class="seg-btn active" data-mode="bulan">Bulanan</button>
+            <button type="button" class="seg-btn" data-mode="tahun">Tahunan</button>
+          </div>
+          <div id="x-grafik" class="bars"></div>
+          <p id="x-grafik-info" class="bar-info" role="status"></p>
+          <p id="x-grafik-ket" class="note hint"></p>
+        </section>
+
+        <section class="card">
+          <h2 class="sched-title">Perbandingan Bulan</h2>
+          <div id="x-banding"></div>
+        </section>
+
+        <section class="card">
+          <h2 class="sched-title">Per Kategori</h2>
+          <div id="x-kategori" class="rank"></div>
+        </section>
+
+        <section class="card">
+          <h2 class="sched-title">Per Kendaraan</h2>
+          <div id="x-per-kendaraan" class="rank"></div>
+        </section>
+
+        <section class="card form">
+          <h2 class="sched-title">Riwayat Pengeluaran</h2>
+          <label for="x-cari">Cari nama atau lokasi</label>
+          <input id="x-cari" type="search" maxlength="60" placeholder="Contoh: Pertalite atau Bengkel">
+          <label for="x-kategori-saring">Kategori</label>
+          <select id="x-kategori-saring"></select>
+          <p id="x-riwayat-ringkas" class="note hint"></p>
+          <div id="x-riwayat" class="x-list"></div>
+          <button id="x-lagi" class="btn" type="button" hidden>Tampilkan lebih banyak</button>
+        </section>
+      </div>
+    </div>
+
+    <!-- ===== Layar Analitik (dibuka dari Garasi) ===== -->
+    <div id="view-analitik" class="view" hidden>
+      <div class="section-head">
+        <h2>Analitik</h2>
+      </div>
+      <button id="btn-analitik-kembali" class="link-btn back" type="button">&lsaquo; Kembali ke Garasi</button>
+
+      <section class="card form filter-card">
+        <label for="a-kendaraan">Kendaraan</label>
+        <select id="a-kendaraan"></select>
+
+        <label for="a-periode">Periode</label>
+        <select id="a-periode">
+          <option value="semua">Semua waktu</option>
+          <option value="bulan-ini">Bulan ini</option>
+          <option value="bulan-lalu">Bulan lalu</option>
+          <option value="30-hari">30 hari terakhir</option>
+          <option value="tahun-ini">Tahun ini</option>
+          <option value="bulan">Pilih bulan dan tahun</option>
+          <option value="rentang">Rentang tanggal</option>
+        </select>
+
+        <div id="a-bulan-box" class="fld" hidden>
+          <label for="a-bulan">Bulan dan tahun</label>
+          <input id="a-bulan" type="month">
+        </div>
+        <div id="a-rentang-box" class="fld" hidden>
+          <label for="a-dari">Dari tanggal</label>
+          <input id="a-dari" type="date">
+          <label for="a-sampai">Sampai tanggal</label>
+          <input id="a-sampai" type="date">
+        </div>
+        <p id="a-periode-info" class="note hint"></p>
+      </section>
+
+      <section id="a-kosong" class="card empty" hidden>
+        <h2>Belum ada kendaraan</h2>
+        <p>Tambahkan kendaraan di tab Garasi dulu.</p>
+      </section>
+
+      <div id="a-isi" class="stack" hidden>
+        <div class="pills" id="a-nav" role="tablist" aria-label="Bagian analitik">
+          <button type="button" class="pill active" data-panel="ringkasan">Ringkasan</button>
+          <button type="button" class="pill" data-panel="bbm">BBM</button>
+          <button type="button" class="pill" data-panel="biaya">Biaya</button>
+          <button type="button" class="pill" data-panel="rawat">Servis &amp; Cuci</button>
+          <button type="button" class="pill" data-panel="banding">Bandingkan</button>
+        </div>
+
+        <!-- Ringkasan -->
+        <div class="stack panel" id="p-ringkasan">
+          <section class="card summary">
+            <div class="wide"><p class="k">Total pengeluaran</p><p class="v" id="a-total"></p></div>
+            <div><p class="k">Total jarak</p><p class="v" id="a-km"></p></div>
+            <div><p class="k">Biaya per km</p><p class="v" id="a-bpk"></p></div>
+            <div><p class="k">Konsumsi BBM</p><p class="v" id="a-kpl"></p></div>
+            <div><p class="k">Total liter BBM</p><p class="v" id="a-liter"></p></div>
+            <div><p class="k">Rata-rata bulanan</p><p class="v" id="a-rata"></p></div>
+            <div><p class="k">Catatan servis</p><p class="v" id="a-servis"></p></div>
+            <div><p class="k">Catatan cuci</p><p class="v" id="a-cuci"></p></div>
+          </section>
+          <section class="card">
+            <h2 class="sched-title">Status Dokumen</h2>
+            <div id="a-dok"></div>
+          </section>
+          <section class="card">
+            <h2 class="sched-title">Tren Pengeluaran Bulanan</h2>
+            <div id="a-g-bulan" class="bars"></div>
+            <p id="a-g-bulan-info" class="bar-info" role="status"></p>
+            <p class="note hint">12 bulan berakhir di akhir periode. Batang abu-abu ada di luar periode terpilih.</p>
+          </section>
+          <p id="a-catatan" class="note hint"></p>
+        </div>
+
+        <!-- BBM -->
+        <div class="stack panel" id="p-bbm" hidden>
+          <section class="card summary">
+            <div><p class="k">Konsumsi rata-rata</p><p class="v" id="b-kpl"></p></div>
+            <div><p class="k">Total liter</p><p class="v" id="b-liter"></p></div>
+            <div><p class="k">Total biaya BBM</p><p class="v" id="b-biaya"></p></div>
+            <div><p class="k">Jumlah pengisian</p><p class="v" id="b-isi"></p></div>
+          </section>
+          <section class="card">
+            <h2 class="sched-title">Rata-rata per Kendaraan</h2>
+            <div id="b-per-kendaraan" class="rank"></div>
+            <p id="b-metode" class="note hint"></p>
+          </section>
+          <section class="card">
+            <h2 class="sched-title">Konsumsi BBM Bulanan</h2>
+            <div id="a-g-liter" class="bars"></div>
+            <p id="a-g-liter-info" class="bar-info" role="status"></p>
+            <p class="note hint">Liter yang diisi tiap bulan, semua pengisian.</p>
+          </section>
+          <section class="card">
+            <h2 class="sched-title">Tren Efisiensi BBM</h2>
+            <div id="a-g-efisiensi" class="lines"></div>
+            <div id="a-g-efisiensi-leg" class="legend"></div>
+            <p id="a-g-efisiensi-info" class="bar-info" role="status"></p>
+            <p id="b-efisiensi-ket" class="note hint"></p>
+          </section>
+          <section class="card form">
+            <h2 class="sched-title">Harga BBM</h2>
+            <label for="b-jenis">Jenis BBM</label>
+            <select id="b-jenis"></select>
+            <div id="a-g-harga" class="lines"></div>
+            <p id="a-g-harga-info" class="bar-info" role="status"></p>
+            <div id="b-harga-ringkas" class="banding"></div>
+            <h3 class="sub-judul">Riwayat harga per jenis</h3>
+            <div id="b-harga-daftar" class="x-list"></div>
+          </section>
+        </div>
+
+        <!-- Biaya -->
+        <div class="stack panel" id="p-biaya" hidden>
+          <section class="card">
+            <h2 class="sched-title">Biaya Operasional per Kendaraan</h2>
+            <div id="c-per-kendaraan" class="rank"></div>
+            <p class="note hint">Biaya per km = pengeluaran antara catatan odometer pertama dan terakhir pada periode, dibagi jarak. Perlu jarak minimal 100 km.</p>
+          </section>
+          <section class="card">
+            <h2 class="sched-title">Distribusi Biaya per Kategori</h2>
+            <div id="c-kategori" class="rank"></div>
+            <p id="c-pajak" class="note hint"></p>
+          </section>
+          <section class="card">
+            <h2 class="sched-title">Perbandingan Antarbulan</h2>
+            <div id="c-bulan" class="x-list"></div>
+          </section>
+        </div>
+
+        <!-- Servis & Cuci -->
+        <div class="stack panel" id="p-rawat" hidden>
+          <section class="card summary">
+            <div class="wide"><p class="k">Servis dan perawatan</p><p class="v" id="r-judul-servis"></p></div>
+            <div><p class="k">Catatan servis</p><p class="v" id="r-jumlah"></p></div>
+            <div><p class="k">Kunjungan servis</p><p class="v" id="r-kunjungan"></p></div>
+            <div><p class="k">Total biaya servis</p><p class="v" id="r-total"></p></div>
+            <div><p class="k">Frekuensi</p><p class="v" id="r-freq"></p></div>
+            <div><p class="k">Rata-rata jarak antarservis</p><p class="v" id="r-km"></p></div>
+            <div><p class="k">Rata-rata waktu antarservis</p><p class="v" id="r-hari"></p></div>
+            <div class="wide"><p class="k">Kategori biaya terbesar</p><p class="v" id="r-besar"></p></div>
+          </section>
+          <section class="card">
+            <h2 class="sched-title">Riwayat Servis per Kategori</h2>
+            <div id="r-kategori" class="rank"></div>
+          </section>
+          <section class="card">
+            <h2 class="sched-title">Jadwal Perawatan Berikutnya</h2>
+            <div id="r-jadwal" class="x-list"></div>
+            <p class="note hint">Jadwal berasal dari pengingat yang Anda isi pada catatan servis. Tidak adanya catatan atau jadwal bukan tanda kendaraan dalam kondisi baik. Pemeriksaan di bengkel tetap diperlukan.</p>
+          </section>
+          <section class="card summary">
+            <div class="wide"><p class="k">Cuci kendaraan</p><p class="v" id="w-judul"></p></div>
+            <div><p class="k">Frekuensi</p><p class="v" id="w-jumlah"></p></div>
+            <div><p class="k">Rata-rata jarak antarcuci</p><p class="v" id="w-hari"></p></div>
+            <div><p class="k">Total biaya cuci</p><p class="v" id="w-total"></p></div>
+            <div><p class="k">Rata-rata biaya per cuci</p><p class="v" id="w-rata"></p></div>
+          </section>
+          <section class="card">
+            <h2 class="sched-title">Tren Biaya Cuci Bulanan</h2>
+            <div id="a-g-cuci" class="bars"></div>
+            <p id="a-g-cuci-info" class="bar-info" role="status"></p>
+            <p id="w-catatan" class="note hint"></p>
+          </section>
+        </div>
+
+        <!-- Bandingkan -->
+        <div class="stack panel" id="p-banding" hidden>
+          <section id="m-sedikit" class="card empty" hidden>
+            <h2>Perbandingan butuh 2 kendaraan</h2>
+            <p>Bagian ini tampil setelah Anda punya dua kendaraan atau lebih.</p>
+          </section>
+          <div id="m-isi" class="stack" hidden>
+            <p class="note hint" id="m-ket"></p>
+            <section class="card"><h2 class="sched-title">Total Pengeluaran</h2><div id="m-total" class="rank"></div></section>
+            <section class="card"><h2 class="sched-title">Biaya per Kilometer</h2><div id="m-bpk" class="rank"></div></section>
+            <section class="card"><h2 class="sched-title">Efisiensi BBM (km/L)</h2><div id="m-kpl" class="rank"></div></section>
+            <section class="card"><h2 class="sched-title">Total Jarak (Odometer)</h2><div id="m-km" class="rank"></div></section>
+            <section class="card"><h2 class="sched-title">Frekuensi Servis</h2><div id="m-freq" class="rank"></div></section>
+            <section class="card"><h2 class="sched-title">Total Biaya Perawatan</h2><div id="m-rawat" class="rank"></div></section>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ===== Layar Pengaturan ===== -->
     <div id="view-pengaturan" class="view" hidden>
       <div class="section-head">
@@ -135,7 +575,7 @@
 
       <section class="card form">
         <h2>Cadangkan Data</h2>
-        <p>Buat satu file cadangan yang dikunci dengan sandi. Isinya kendaraan, foto, catatan BBM, dan catatan servis. Simpan di aplikasi Berkas.</p>
+        <p>Buat satu file cadangan yang dikunci dengan sandi. Isinya kendaraan, foto, catatan BBM, servis, cuci, dokumen, dan pengeluaran manual beserta foto struknya. Simpan di aplikasi Berkas.</p>
 
         <label for="b-sandi">Sandi cadangan</label>
         <input id="b-sandi" type="password" autocomplete="off" placeholder="Minimal 8 karakter">
@@ -176,8 +616,9 @@
     <button class="tab active" type="button" data-view="garasi">Garasi</button>
     <button class="tab" type="button" data-view="bbm">BBM</button>
     <button class="tab" type="button" data-view="servis">Servis</button>
-    <button class="tab soon" type="button" aria-disabled="true">Biaya</button>
-    <button class="tab" type="button" data-view="pengaturan">Pengaturan</button>
+    <button class="tab" type="button" data-view="cuci">Cuci</button>
+    <button class="tab" type="button" data-view="dokumen">Dokumen</button>
+    <button class="tab" type="button" data-view="pengaturan">Setelan</button>
   </nav>
 
   <!-- ===== Formulir tambah kendaraan ===== -->
@@ -317,29 +758,58 @@
         <label for="s-kendaraan">Kendaraan</label>
         <select id="s-kendaraan"></select>
 
-        <label for="s-tanggal">Tanggal</label>
+        <label for="s-tanggal">Tanggal servis</label>
         <input id="s-tanggal" type="date" required>
 
         <label for="s-km">Odometer (km)</label>
         <input id="s-km" type="number" inputmode="numeric" placeholder="Contoh: 45200" required>
 
-        <label for="s-jenis">Jenis</label>
-        <select id="s-jenis">
-          <option>Servis Berkala</option>
-          <option>Ganti Oli</option>
-          <option>Ban</option>
-          <option>Rem</option>
-          <option>Aki</option>
-          <option>Perbaikan</option>
-          <option>Pajak &amp; STNK</option>
-          <option>Lainnya</option>
-        </select>
+        <label for="s-jenis">Kategori</label>
+        <select id="s-jenis"></select>
 
-        <label for="s-biaya">Biaya (Rp)</label>
-        <input id="s-biaya" type="number" inputmode="numeric" placeholder="Contoh: 350000" required>
+        <label for="s-bengkel">Nama bengkel (boleh kosong)</label>
+        <input id="s-bengkel" type="text" maxlength="80" placeholder="Contoh: Bengkel Maju Jaya">
+
+        <label for="s-produk">Nama suku cadang / produk (boleh kosong)</label>
+        <input id="s-produk" type="text" maxlength="80" placeholder="Contoh: Oli 10W-40, filter oli">
+
+        <label for="s-part">Biaya suku cadang (Rp)</label>
+        <input id="s-part" type="text" inputmode="numeric" placeholder="Kosong = 0">
+
+        <label for="s-jasa">Biaya jasa (Rp)</label>
+        <input id="s-jasa" type="text" inputmode="numeric" placeholder="Kosong = 0">
+
+        <p class="lbl">Total biaya</p>
+        <p id="s-total" class="total-box">Rp 0</p>
+        <p id="s-lama" class="note hint" hidden>Catatan lama hanya menyimpan total. Totalnya dimasukkan ke suku cadang; silakan bagi ulang jika mau.</p>
 
         <label for="s-catatan">Catatan (boleh kosong)</label>
-        <input id="s-catatan" type="text" maxlength="120" placeholder="Contoh: Oli 10W-40, filter oli">
+        <input id="s-catatan" type="text" maxlength="120" placeholder="Contoh: Ganti tiap 5.000 km">
+
+        <p class="lbl">Foto struk / nota servis</p>
+        <div class="foto-box">
+          <div id="s-foto-preview" class="foto-preview"></div>
+          <div class="foto-actions">
+            <button type="button" class="btn small" id="btn-sfoto">Pilih Foto</button>
+            <button type="button" class="link-btn" id="btn-sfoto-hapus" hidden>Hapus Foto</button>
+          </div>
+        </div>
+        <input id="s-foto" class="sr-only" type="file" accept="image/*" tabindex="-1" aria-label="Pilih foto struk servis">
+        <p id="sfoto-msg" class="note" hidden></p>
+
+        <p class="lbl">Servis berikutnya (boleh kosong)</p>
+        <label for="s-due-tgl">Jatuh tempo: tanggal</label>
+        <input id="s-due-tgl" type="date">
+
+        <label for="s-due-km">Jatuh tempo: odometer (km)</label>
+        <input id="s-due-km" type="number" inputmode="numeric" placeholder="Contoh: 50200">
+        <p class="note hint">Jatuh tempo tiba bila salah satu tercapai: tanggalnya ATAU odometernya.</p>
+
+        <label for="s-ingat">Pengingat</label>
+        <select id="s-ingat">
+          <option value="aktif">Aktif</option>
+          <option value="nonaktif">Dimatikan</option>
+        </select>
 
         <p id="service-error" class="note bad" hidden></p>
 
@@ -351,8 +821,258 @@
     </div>
   </div>
 
+  <!-- ===== Formulir catat cuci ===== -->
+  <div id="sheet-cuci" class="sheet" hidden>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-cuci-title">
+      <h2 id="sheet-cuci-title">Catat Cuci</h2>
+
+      <form id="cuci-form" class="form" autocomplete="off">
+        <label for="c-kendaraan">Kendaraan</label>
+        <select id="c-kendaraan"></select>
+
+        <label for="c-tanggal">Tanggal cuci</label>
+        <input id="c-tanggal" type="date" required>
+
+        <label for="c-waktu">Jam (boleh kosong)</label>
+        <input id="c-waktu" type="time">
+
+        <label for="c-km">Odometer (km, boleh kosong)</label>
+        <input id="c-km" type="number" inputmode="numeric" placeholder="Contoh: 45200">
+
+        <label for="c-jenis">Jenis cuci</label>
+        <select id="c-jenis"></select>
+
+        <label for="c-lokasi">Lokasi / nama tempat cuci (boleh kosong)</label>
+        <input id="c-lokasi" type="text" maxlength="80" placeholder="Contoh: Doorsmeer Bintaro">
+
+        <label for="c-biaya">Biaya (Rp)</label>
+        <input id="c-biaya" type="text" inputmode="numeric" placeholder="Kosong = 0">
+
+        <label for="c-durasi">Lama pengerjaan, menit (boleh kosong)</label>
+        <input id="c-durasi" type="number" inputmode="numeric" placeholder="Contoh: 45">
+
+        <label for="c-catatan">Catatan (boleh kosong)</label>
+        <input id="c-catatan" type="text" maxlength="120" placeholder="Contoh: Sebelum perjalanan jauh">
+
+        <p class="lbl">Foto (sebelum/sesudah atau struk), maksimal 3</p>
+        <div id="c-fotos" class="foto-grid"></div>
+        <button type="button" class="btn small" id="btn-cfoto">Tambah Foto</button>
+        <input id="c-foto" class="sr-only" type="file" accept="image/*" multiple tabindex="-1" aria-label="Pilih foto cuci">
+        <p id="cfoto-msg" class="note" hidden></p>
+
+        <p id="cuci-error" class="note bad" hidden></p>
+
+        <div class="form-actions">
+          <button class="btn primary" type="submit">Simpan</button>
+          <button class="btn" type="button" id="btn-cancel-cuci">Batal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== Formulir dokumen ===== -->
+  <div id="sheet-dok" class="sheet" hidden>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-dok-title">
+      <h2 id="sheet-dok-title">Tambah Dokumen</h2>
+
+      <form id="dok-form" class="form" autocomplete="off">
+        <label for="d-kendaraan">Kendaraan</label>
+        <select id="d-kendaraan"></select>
+
+        <label for="d-jenis">Jenis dokumen</label>
+        <select id="d-jenis"></select>
+
+        <div class="fld" data-for="SIM Lainnya">
+          <label for="d-nama" id="lbl-d-nama">Nama dokumen</label>
+          <input id="d-nama" type="text" maxlength="60" placeholder="Contoh: KIR">
+        </div>
+        <div class="fld" data-for="STNK Asuransi BPKB SIM Lainnya">
+          <label for="d-nomor" id="lbl-d-nomor">Nomor</label>
+          <input id="d-nomor" type="text" maxlength="40">
+        </div>
+        <div class="fld" data-for="Asuransi">
+          <label for="d-perusahaan">Nama perusahaan asuransi</label>
+          <input id="d-perusahaan" type="text" maxlength="60" placeholder="Contoh: Asuransi Sejahtera">
+        </div>
+        <div class="fld" data-for="Asuransi">
+          <label for="d-perlindungan">Jenis perlindungan</label>
+          <select id="d-perlindungan"></select>
+        </div>
+        <div class="fld" data-for="STNK BPKB SIM Lainnya">
+          <label for="d-terbit">Tanggal terbit (boleh kosong)</label>
+          <input id="d-terbit" type="date">
+        </div>
+        <div class="fld" data-for="Asuransi">
+          <label for="d-mulai">Tanggal mulai polis</label>
+          <input id="d-mulai" type="date">
+        </div>
+        <div class="fld" data-for="Asuransi">
+          <label for="d-berakhir">Tanggal berakhir polis</label>
+          <input id="d-berakhir" type="date">
+        </div>
+        <div class="fld" data-for="STNK">
+          <label for="d-pajak">Jatuh tempo pajak tahunan</label>
+          <input id="d-pajak" type="date">
+        </div>
+        <div class="fld" data-for="STNK">
+          <label for="d-stnk5">Jatuh tempo STNK 5 tahunan</label>
+          <input id="d-stnk5" type="date">
+        </div>
+        <div class="fld" data-for="SIM Lainnya">
+          <label for="d-berlaku">Berlaku sampai (boleh kosong)</label>
+          <input id="d-berlaku" type="date">
+        </div>
+        <div class="fld" data-for="STNK Asuransi">
+          <label for="d-biaya" id="lbl-d-biaya">Biaya yang dibayar, Rp (boleh kosong)</label>
+          <input id="d-biaya" type="text" inputmode="numeric" placeholder="Kosong = tidak dihitung di Pengeluaran">
+        </div>
+        <div class="fld" data-for="STNK Asuransi">
+          <label for="d-bayar">Tanggal pembayaran (wajib bila biaya diisi)</label>
+          <input id="d-bayar" type="date">
+        </div>
+        <div class="fld" data-for="STNK Asuransi BPKB SIM Lainnya">
+          <label for="d-catatan">Catatan (boleh kosong)</label>
+          <input id="d-catatan" type="text" maxlength="120">
+        </div>
+        <p class="lbl">Foto dokumen, maksimal 3</p>
+        <div id="d-fotos" class="foto-grid"></div>
+        <button type="button" class="btn small" id="btn-dfoto">Tambah Foto</button>
+        <input id="d-foto" class="sr-only" type="file" accept="image/*" multiple tabindex="-1" aria-label="Pilih foto dokumen">
+        <p id="dfoto-msg" class="note" hidden></p>
+        <p class="note hint">Hanya foto yang didukung (bukan file PDF). Foto halaman dokumen langsung dari kamera.</p>
+
+        <div class="fld" data-for="STNK Asuransi SIM Lainnya">
+          <label for="d-ingat">Pengingat</label>
+          <select id="d-ingat"><option value="aktif">Aktif (saat aplikasi dibuka)</option><option value="nonaktif">Dimatikan</option></select>
+        </div>
+        <p id="dok-error" class="note bad" hidden></p>
+
+        <div class="form-actions">
+          <button class="btn primary" type="submit">Simpan</button>
+          <button class="btn" type="button" id="btn-cancel-dok">Batal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== Detail dokumen ===== -->
+  <div id="sheet-dok-detail" class="sheet viewer" hidden>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="dok-detail-title">
+      <h2 id="dok-detail-title">Detail Dokumen</h2>
+      <div id="dok-detail-body" class="detail"></div>
+      <div id="dok-detail-fotos" class="viewer-stack"></div>
+      <div class="form-actions">
+        <button class="btn" type="button" id="btn-dok-ubah">Ubah</button>
+        <button class="btn" type="button" id="btn-dok-hapus">Hapus</button>
+        <button class="btn primary" type="button" id="btn-dok-tutup">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Formulir pengeluaran manual ===== -->
+  <div id="sheet-biaya" class="sheet" hidden>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-biaya-title">
+      <h2 id="sheet-biaya-title">Catat Pengeluaran</h2>
+
+      <form id="biaya-form" class="form" autocomplete="off">
+        <label for="e-kendaraan">Kendaraan</label>
+        <select id="e-kendaraan"></select>
+
+        <label for="e-tanggal">Tanggal</label>
+        <input id="e-tanggal" type="date" required>
+
+        <label for="e-waktu">Jam (boleh kosong)</label>
+        <input id="e-waktu" type="time">
+
+        <label for="e-kategori">Kategori</label>
+        <select id="e-kategori"></select>
+
+        <label for="e-nama">Nama pengeluaran</label>
+        <input id="e-nama" type="text" maxlength="60" placeholder="Contoh: Parkir Mal Kota">
+
+        <label for="e-biaya">Nominal biaya (Rp)</label>
+        <input id="e-biaya" type="text" inputmode="numeric" placeholder="Contoh: 15000">
+
+        <label for="e-lokasi">Lokasi / nama toko atau bengkel (boleh kosong)</label>
+        <input id="e-lokasi" type="text" maxlength="80">
+
+        <label for="e-catatan">Deskripsi atau catatan (boleh kosong)</label>
+        <input id="e-catatan" type="text" maxlength="200">
+
+        <p class="lbl">Foto struk (boleh kosong)</p>
+        <div class="foto-box">
+          <div id="e-foto-preview" class="foto-preview"></div>
+          <div class="foto-actions">
+            <button type="button" class="btn small" id="btn-efoto">Pilih Foto</button>
+            <button type="button" class="link-btn" id="btn-efoto-hapus" hidden>Hapus Foto</button>
+          </div>
+        </div>
+        <input id="e-foto" class="sr-only" type="file" accept="image/*" tabindex="-1" aria-label="Pilih foto struk">
+        <p id="efoto-msg" class="note" hidden></p>
+
+        <p id="biaya-error" class="note bad" hidden></p>
+
+        <div class="form-actions">
+          <button class="btn primary" type="submit">Simpan</button>
+          <button class="btn" type="button" id="btn-cancel-biaya">Batal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== Detail pengeluaran ===== -->
+  <div id="sheet-biaya-detail" class="sheet viewer" hidden>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="biaya-detail-title">
+      <h2 id="biaya-detail-title">Detail Pengeluaran</h2>
+      <div id="biaya-detail-body" class="detail"></div>
+      <p id="biaya-detail-ket" class="note hint" hidden></p>
+      <div id="biaya-detail-fotos" class="viewer-stack"></div>
+      <div class="form-actions">
+        <button class="btn" type="button" id="btn-biaya-ubah">Ubah</button>
+        <button class="btn" type="button" id="btn-biaya-hapus">Hapus</button>
+      </div>
+      <div class="form-actions">
+        <button class="btn" type="button" id="btn-biaya-sumber" hidden>Buka di menu sumber</button>
+        <button class="btn primary" type="button" id="btn-biaya-tutup">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Penampil foto cuci ===== -->
+  <div id="sheet-foto-cuci" class="sheet viewer" hidden>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-label="Foto cuci">
+      <div id="viewer-cuci" class="viewer-stack"></div>
+      <button class="btn" type="button" id="btn-viewer-cuci-close">Tutup</button>
+    </div>
+  </div>
+
+  <!-- ===== Penampil foto struk ===== -->
+  <div id="sheet-foto" class="sheet viewer" hidden>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-label="Foto struk servis">
+      <img id="viewer-img" alt="Foto struk servis">
+      <button class="btn" type="button" id="btn-viewer-close">Tutup</button>
+    </div>
+  </div>
+
+  <!-- ===== Kotak konfirmasi ===== -->
+  <div id="sheet-tanya" class="sheet confirm" hidden>
+    <div class="sheet-panel" role="alertdialog" aria-modal="true" aria-labelledby="tanya-judul" aria-describedby="tanya-teks">
+      <h2 id="tanya-judul">Konfirmasi</h2>
+      <p id="tanya-teks"></p>
+      <div class="form-actions">
+        <button class="btn primary" type="button" id="tanya-ya">Ya</button>
+        <button class="btn" type="button" id="tanya-batal">Batal</button>
+      </div>
+    </div>
+  </div>
+
   <script src="db.js"></script>
   <script src="fuel.js"></script>
+  <script src="service.js"></script>
+  <script src="carwash.js"></script>
+  <script src="dokumen.js"></script>
+  <script src="pengeluaran.js"></script>
+  <script src="analitik.js"></script>
   <script src="backup.js"></script>
   <script src="app.js"></script>
 </body>
